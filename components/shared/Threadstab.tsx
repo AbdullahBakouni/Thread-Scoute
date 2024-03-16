@@ -69,6 +69,7 @@ async function Threadstab ({currentUserId,accountId,accountType}:props)  {
         community= {thread.community}
         createdAt={thread.createdAt}
         comments={thread.children}
+        likes = {thread.LikeCount}
       />
     ))}
   </section>

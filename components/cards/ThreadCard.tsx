@@ -1,6 +1,12 @@
+
 import Image from "next/image";
 import Link from "next/link";
-
+import LikeButton from "../shared/LikeButton";
+import ShareButton from "../shared/ShareButton";
+import { Button } from "../ui/button";
+import { useRouter } from 'next/router'
+import { showless, showmore } from "@/lib/actions/user.action";
+import FollowBlockCard from "./FollowBlockCard";
 interface props {
     id: string;
     currentuserId: string;
@@ -23,6 +29,8 @@ interface props {
       };
     }[];
     iscomment?: boolean;
+    likes : number;
+    isHomePage?: boolean
   }
 
     const ThreadCard = ({
@@ -34,9 +42,14 @@ interface props {
         community,
         createdAt,
         comments,
-        iscomment
-    }:props) => {  
+        likes,
+        iscomment,
+        isHomePage
+    }:props) => { 
 
+      // const handleclickmore () =>{
+
+      // }
     return (
       <article className={`flex flex-col w-full  rounded-xl  ${iscomment ? 
             "px-0 xs:px-7" : "bg-dark-2 p-7"}`}>
@@ -62,13 +75,10 @@ interface props {
 
                 <div className="flex flex-col mt-5 gap-3">
                     <div className="flex gap-3.5">
-                        <Image 
-                        src="/assets/heart-gray.svg"
-                        alt="heart"
-                        width={24}
-                        height={24}
-                        className="cursor-pointer object-contain"
-                        />
+
+                       <LikeButton initialLikes={likes} threadId={id} userId = {currentuserId}/>
+
+
                         <Link href={`/thread/${id}`}>
                         <Image 
                         src="/assets/reply.svg"
@@ -78,6 +88,7 @@ interface props {
                         className="cursor-pointer object-contain"
                         />
                         </Link>
+                        <ShareButton postId = {id} currentUser = {currentuserId}/>
                     </div>
                     {iscomment && comments.length > 0 && (
                         <Link href={`/thread/${id}`}>
@@ -86,7 +97,14 @@ interface props {
                     )}
 
                 </div>
-          </div>
+                {isHomePage && (
+          <FollowBlockCard
+            author={author.id}
+            currentuser={currentuserId}
+            isHomePage={isHomePage}
+        />
+      )}
+           </div>
      </div>
   </div>
       </article>

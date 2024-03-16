@@ -15,6 +15,7 @@ const page = async ({params} : {params: {id:string}}) => {
     if(!userInfo?.onboarded) redirect("/onboarded");
 
     const post = await fetchPostbyId(params.id);
+    console.log(post)
   return (
     <section className="relative ">
         <div>
@@ -28,6 +29,7 @@ const page = async ({params} : {params: {id:string}}) => {
             community = {post.community}
             createdAt = {post.createdAt}
             comments = {post.children}
+            likes = {post.LikeCount}
         />
       </div>
 
@@ -44,7 +46,7 @@ const page = async ({params} : {params: {id:string}}) => {
              <ThreadCard 
               key = {childItem._id}
               id = {childItem._id}
-              currentuserId = {childItem?.id || ""}
+              currentuserId = {user?.id || ""}
               parentId = {childItem.parentId}
               content = {childItem.text}
               author = {childItem.author}
@@ -52,6 +54,7 @@ const page = async ({params} : {params: {id:string}}) => {
               createdAt = {childItem.createdAt}
               comments = {childItem.children}
               iscomment
+              likes={childItem.LikeCount}
              />
         ))}
       </div>

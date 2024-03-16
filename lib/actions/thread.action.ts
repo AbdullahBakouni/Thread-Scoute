@@ -3,19 +3,23 @@ import { revalidatePath } from "next/cache";
 import Thread from "../models/thread.model";
 import User from "../models/user.model";
 import { ConnenctToDB } from "../mongoose"
+import mongoose from "mongoose";
+// import mongoose from "mongoose";
 
 interface params {
     text : string,
     author : string,
+    tags : string[],
     communityId : string | null,
     path: string
 }
-export async function createThread ({text,author,communityId,path}:params) {
+export async function createThread ({text,tags,author,communityId,path}:params) {
     try {
         ConnenctToDB();
 
     const createThread = await Thread.create({
         text ,
+        tags,
         author,
         communityId : null
     });
@@ -136,6 +140,123 @@ export async function addCommentToPost(
         throw new Error(`Error adding comments to threads ${error.message}`);
     }
 }
+// export async function addlike(
+//     threadId :string,
+//     userId :string,
+//     path:string
+// ){
+//     ConnenctToDB();
+      
+//     try {
+       
+//         // Find the thread and user documents
+//         const Likedthreads = await Thread.findById(threadId);
+//         const LikedUser = await User.findOne({id:userId});
+//             console.log(Likedthreads)
+//             console.log(LikedUser)
+//         // Check if the thread and user exist
+//         if (!Likedthreads) {
+//             throw new Error('Thread  not found.');
+//         }
+//         if(!LikedUser){
+//             throw new Error('user  not found.');
+//         }
+
+//         // Check if the user has already liked the thread
+//         const alreadyLiked = LikedUser.LikedThreads.includes(threadId);
+
+//         // Update the thread's like count and user's liked threads
+//         if (alreadyLiked) {
+//             Likedthreads.LikeCount-=1;
+//             LikedUser.LikedThreads.pull(threadId);
+//         } else {
+//             Likedthreads.LikeCount+=1;
+//             LikedUser.LikedThreads.push(threadId);
+//         }
+
+//         // Save the changes to both documents
+//         await Likedthreads.save();
+//         await LikedUser.save();
+
+//         // Revalidate the path if necessary
+       
+//          revalidatePath(path);
+        
+
+//         return alreadyLiked ? 'Like removed.' : 'Like added.';
+//     } catch (error: any) {
+//         throw new Error(`Error updating like status: ${error.message}`);
+//     }
+// }
+// استخدم هذا الملف لتعريف وظائف الخادم الخاصة بك
+
+
+export async function addlike(postId:string, userId:string, path:string) {
+    ConnenctToDB();
+    try {
+       
+        
+        // البحث عن المنشور الأصلي
+        const originalPost = await Thread.findById(postId);
+        if (!originalPost) {
+            throw new Error("Thread not Found");
+        }
+        
+        // البحث عن المستخدم وإضافة المنشور إلى قائمة الإعجابات
+        const user = await User.findOne({id:userId});
+        if (!user) {
+            throw new Error("User not Found");
+        }
+        
+        // التحقق من عدم وجود المنشور في قائمة الإعجابات للمستخدم
+        const isAlreadyLiked = user.LikedThreads.includes(postId);
+        if (!isAlreadyLiked) {
+            // إضافة المنشور إلى قائمة الإعجابات للمستخدم
+            user.LikedThreads.push(postId);
+            await user.save();
+            
+            // تحديث عدد الإعجابات في المنشور
+            originalPost.LikeCount += 1;
+            await originalPost.save();
+            
+            // إعادة تحقق الصفحة
+            revalidatePath(path);
+        }
+    } catch (error:any) {
+        throw new Error(`Error adding like to the thread: ${error.message}`);
+    }
+}
+export async function removelike(postId:string, userId:string, path:string) {
+    try {
+        ConnenctToDB();
+        
+        // البحث عن المنشور الأصلي
+        const originalPost = await Thread.findById(postId);
+        if (!originalPost) {
+            throw new Error("Thread not Found");
+        }
+        
+        // البحث عن المستخدم وإزالة المنشور من قائمة الإعجابات
+        const user = await User.findOne({id:userId});
+        if (!user) {
+            throw new Error("User not Found");
+        }
+        
+        // إزالة المنشور من قائمة الإعجابات للمستخدمسفقهىل
+        user.LikedThreads.pull(postId);
+        await user.save();
+        
+        // تحديث عدد الإعجابات في المنشور
+        originalPost.LikeCount -= 1;
+        await originalPost.save();
+        
+        // إعادة تحقق الصفحة
+        revalidatePath(path);
+    } catch (error:any) {
+        throw new Error(`Error removing like from the thread: ${error.message}`);
+    }
+}
+
 /*
 If pageNumber is 1 and pageSize is 20, it means we are on the first page and we want to display 20 posts per page.
  Therefore, the number of posts to skip would be (1 - 1) * 20 = 0.

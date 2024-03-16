@@ -22,7 +22,45 @@ const userSchema = new mongoose.Schema({
             type : mongoose.Schema.Types.ObjectId ,
             ref : "Community"
         }
-    ]
+    ],
+    LikedThreads : [
+        {
+            type : mongoose.Schema.Types.ObjectId,
+            ref : "Thread"
+        }
+    ],
+    Interests : {
+        type : [String],
+    },
+    SharedThreads : [
+        {
+            type : mongoose.Schema.Types.ObjectId,
+            ref : "Thread"
+        }
+    ],
+    ReceiveThreads: [
+        {
+            type : mongoose.Schema.Types.ObjectId,
+            ref : "Thread"
+        }
+      ],
+      IntrestedUser : {
+        type : [String],
+    },
+    BlockUser : {
+        type : [String],
+    },
+    followinguser : {
+        type : [String],
+    },
+    myFollowNumber : {
+        type : Number,
+        default : 0
+       },
+       followingpeople : {
+        type : Number,
+        default : 0
+       },
 });
 
 const User = mongoose.models.User || mongoose.model("User", userSchema);

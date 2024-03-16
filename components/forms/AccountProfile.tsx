@@ -80,11 +80,8 @@ const {startUpload} = useUploadThing("media");
         else{
           router.push("/");
         }
-<<<<<<< HEAD
       }
-=======
-       }
->>>>>>> AbdullahBranch
+      //  }
       const handleImage = (e:ChangeEvent<HTMLInputElement>  ,fieldChange:(value : string) => void) =>{
         e.preventDefault();
 

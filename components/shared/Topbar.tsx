@@ -8,18 +8,11 @@ const Topbar = () => {
     <nav className='topbar'>
         <Link href="/" className='flex items-center gap-4'>
               <Image 
-<<<<<<< HEAD
-                src="/assets/logo.svg"
-                width={28}
-                height={28}
-                alt='logo'
-=======
                 src="/assets/Thread.jpg"
                 width={65}
                 height={65}
                 alt='logo'
                 className='rounded-full shadow'
->>>>>>> AbdullahBranch
               />
               <p className='text-heading3-bold text-light-1 max-xs:hidden'>Thread Scout</p>
         </Link>
