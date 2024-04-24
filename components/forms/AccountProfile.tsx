@@ -80,7 +80,7 @@ const {startUpload} = useUploadThing("media");
         else{
           router.push("/");
         }
-      }
+       }
       const handleImage = (e:ChangeEvent<HTMLInputElement>  ,fieldChange:(value : string) => void) =>{
         e.preventDefault();
 
