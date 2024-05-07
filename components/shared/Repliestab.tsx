@@ -1,12 +1,10 @@
 import { getpostusercommentedon} from '@/lib/actions/user.action';
-import { redirect } from 'next/navigation';
-import React from 'react'
 import ThreadCard from '../cards/ThreadCard';
 interface props {
   currentUserId : string;
 }
 const Repliestab = async({ currentUserId }:props) => {
-  // افترض أن هذه الدالة تجلب البيانات وتعيد مصفوفة البوستات والتعليقات
+  
   const postsWithComments = await getpostusercommentedon(currentUserId);
   // console.log(postsWithComments)
   const postsWithCommentsArray = postsWithComments.map(post => ({
@@ -30,7 +28,7 @@ const Repliestab = async({ currentUserId }:props) => {
             community={item.originalPost.community}
             comments={item.originalPost.comments}
             likes={item.originalPost.likes}
-            // أضف الخصائص الأخرى حسب الحاجة
+            // أضف الخصائص الأخرى  
           />
           {/* عرض التعليقات الخاصة بالمنشور الأصلي */}
           {item.commentDetails.map(comment => (
@@ -46,7 +44,7 @@ const Repliestab = async({ currentUserId }:props) => {
               comments={comment.comments}
               currentuserId={comment.author.id}
               iscomment
-              // أضف الخصائص الأخرى حسب الحاجة
+              // أضف الخصائص الأخرى  
             />
           ))}
         </div>

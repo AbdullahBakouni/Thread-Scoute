@@ -140,55 +140,6 @@ export async function addCommentToPost(
         throw new Error(`Error adding comments to threads ${error.message}`);
     }
 }
-// export async function addlike(
-//     threadId :string,
-//     userId :string,
-//     path:string
-// ){
-//     ConnenctToDB();
-      
-//     try {
-       
-//         // Find the thread and user documents
-//         const Likedthreads = await Thread.findById(threadId);
-//         const LikedUser = await User.findOne({id:userId});
-//             console.log(Likedthreads)
-//             console.log(LikedUser)
-//         // Check if the thread and user exist
-//         if (!Likedthreads) {
-//             throw new Error('Thread  not found.');
-//         }
-//         if(!LikedUser){
-//             throw new Error('user  not found.');
-//         }
-
-//         // Check if the user has already liked the thread
-//         const alreadyLiked = LikedUser.LikedThreads.includes(threadId);
-
-//         // Update the thread's like count and user's liked threads
-//         if (alreadyLiked) {
-//             Likedthreads.LikeCount-=1;
-//             LikedUser.LikedThreads.pull(threadId);
-//         } else {
-//             Likedthreads.LikeCount+=1;
-//             LikedUser.LikedThreads.push(threadId);
-//         }
-
-//         // Save the changes to both documents
-//         await Likedthreads.save();
-//         await LikedUser.save();
-
-//         // Revalidate the path if necessary
-       
-//          revalidatePath(path);
-        
-
-//         return alreadyLiked ? 'Like removed.' : 'Like added.';
-//     } catch (error: any) {
-//         throw new Error(`Error updating like status: ${error.message}`);
-//     }
-// }
-// استخدم هذا الملف لتعريف وظائف الخادم الخاصة بك
 
 
 export async function addlike(postId:string, userId:string, path:string) {
@@ -203,18 +154,25 @@ export async function addlike(postId:string, userId:string, path:string) {
         }
         
         // البحث عن المستخدم وإضافة المنشور إلى قائمة الإعجابات
-        const user = await User.findOne({id:userId});
+        const user = await User.findById(userId);
+        const author =  await User.findById(originalPost.author)
         if (!user) {
             throw new Error("User not Found");
         }
         
         // التحقق من عدم وجود المنشور في قائمة الإعجابات للمستخدم
         const isAlreadyLiked = user.LikedThreads.includes(postId);
+        
+        const userwholikes = author.Userwholikes;
+
         if (!isAlreadyLiked) {
             // إضافة المنشور إلى قائمة الإعجابات للمستخدم
             user.LikedThreads.push(postId);
+            userwholikes.push(userId);
+
+            // حفظ التغييرات
             await user.save();
-            
+            await author.save();
             // تحديث عدد الإعجابات في المنشور
             originalPost.LikeCount += 1;
             await originalPost.save();
@@ -232,24 +190,28 @@ export async function removelike(postId:string, userId:string, path:string) {
         
         // البحث عن المنشور الأصلي
         const originalPost = await Thread.findById(postId);
+        const author =  await User.findById(originalPost.author)
         if (!originalPost) {
             throw new Error("Thread not Found");
         }
         
         // البحث عن المستخدم وإزالة المنشور من قائمة الإعجابات
-        const user = await User.findOne({id:userId});
+        const user = await User.findById(userId);
         if (!user) {
             throw new Error("User not Found");
-        }
-        
-        // إزالة المنشور من قائمة الإعجابات للمستخدمسفقهىل
+        } 
+        const userwholikes = author.Userwholikes;
         user.LikedThreads.pull(postId);
-        await user.save();
+        console.log(userwholikes)
+        console.log(userId)
+        userwholikes.pull(userId);
+        await author.save();
         
         // تحديث عدد الإعجابات في المنشور
         originalPost.LikeCount -= 1;
+        await author.save();
         await originalPost.save();
-        
+       
         // إعادة تحقق الصفحة
         revalidatePath(path);
     } catch (error:any) {

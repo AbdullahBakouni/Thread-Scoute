@@ -4,6 +4,8 @@ import User from "../models/user.model";
 import { ConnenctToDB } from "../mongoose";
 import Thread from "../models/thread.model";
 import { error } from "console";
+import mongoose from "mongoose";
+import Intrest from "../models/intrest";
 
 interface params {
     userId : string;
@@ -103,7 +105,7 @@ export async function fetchUserPosts(id: string) {
     ConnenctToDB();
       try {
       
-        return await User.findOne({username : username})   
+        return await User.findOne({username : username}).select("id")   
   } catch (error:any) {
       throw new Error (`Failed to fetch users ${error}`)
   }
@@ -148,14 +150,14 @@ export async function showmore(authorId:string,currentUserId:string){
     ConnenctToDB();
   try {
     const author = await User.findOne({id:authorId});
+    console.log(author)
     const currentuser = await User.findOne({id:currentUserId});
-
       if(!author || !currentuser){
         throw new Error("Author not found or currentuser")
       }
-       currentuser.IntrestedUser.push(authorId);
+       currentuser.IntrestedUser.push(author._id);
         currentuser.myFollowNumber += 1;
-        author.followinguser.push(currentUserId);
+        author.followinguser.push(currentuser._id);
         author.followingpeople += 1;
       await currentuser.save();
       await author.save();
@@ -248,8 +250,9 @@ export async function isuserFollowing(authorId:string,currentUserId:string){
 
   ConnenctToDB();
   try {
+    const author = await User.findOne({id:authorId});
     const currentUser = await User.findOne({ id: currentUserId });
-    return currentUser.IntrestedUser.includes(authorId);
+    return currentUser.IntrestedUser.includes(author._id.toString());
   } catch (error) {
     console.error('Error checking follow status:', error);
     return false; 
@@ -280,3 +283,131 @@ export async function getuserrecievedthreads(userId:string){
   }
 }
 
+export async function getmostlikedfivethreads(userId:string){
+  ConnenctToDB();
+  try {
+    return Thread.find({ author: userId})
+    .sort({ LikeCount: -1 }) // ترتيب تنازلي حسب عدد الإعجابات
+    .limit(5)
+    .populate('author', 'name image id') // الحصول على أعلى 5 نتائج فقط
+    .exec(); // تنف
+  } catch (error) {
+    console.error('Error fetching user recieved threads:', error);
+                    throw error;
+  }
+}
+
+export async function getfollowingpeoplenumber(userId:string){
+  ConnenctToDB();
+
+
+  try {
+    return User.findById(userId, 'followingpeople')
+    .then(user => {
+      if (!user) {
+        throw new Error("No User Found");
+      }
+      return user.followingpeople; // إرجاع عدد الأشخاص الذين يتابعهم
+    })
+  } catch (error) {
+    console.error('Error fetching user recieved threads:', error);
+    throw error;
+  }
+}
+export async function getfollowersusers(userId:string){
+
+    ConnenctToDB();
+
+    try {
+      const user =  await User.findById(userId) // البحث عن المستخدم بالـ id وجلب حقل followinguser
+    .populate({
+      path: "followinguser",
+      model : User ,
+      select : "name image id bio username _id"
+    }) // استخدام populate للحصول على معلومات محددة من مستخدمين يتابعهم المستخدم
+    .exec();
+      
+      if (!user) {
+        throw new Error('المستخدم غير موجود');
+      }
+      return user.followinguser// إرجاع مصفوفة المستخدمين المتابعين
+     // إرجاع مصفوفة المستخدمين المتابعين مع معلوماتهم
+  } catch (error) {
+    console.error('Error fetching following users info:', error);
+    throw error;
+}
+}
+
+export async function getactiveuser(userId:string){
+
+  ConnenctToDB();
+  try {
+    // استخدام aggregate لتجميع وتصفية الـ ObjectId المكررة
+    const aggregatedLikes = await User.aggregate([
+      { $match: { _id: userId } },
+      { $unwind: '$Userwholikes' },
+      { $group: {
+        _id: '$Userwholikes',
+        count: { $sum: 1 }
+      }},
+      { $match: { count: { $gte: 5 } } },
+      { $project: { _id: 1 } }
+    ]);
+
+    // استخراج الـ ObjectId المكررة من النتائج
+    const frequentUserIds = aggregatedLikes.map(like => like._id);
+
+    // استخدام populate لجلب الحقول المطلوبة للمستخدمين المكررين
+    const frequentUsers = await User.find({
+      '_id': { $in: frequentUserIds }
+    }).select('id name image username bio');
+
+    return frequentUsers;
+  } catch (error) {
+    console.error('Error finding frequent users liked by:', error);
+    throw error;
+  }
+}
+
+export async function getuserintrests(userId:string){
+
+    ConnenctToDB();
+    try {
+    
+      const user = await User.findById(userId).populate({
+        path: 'Interests', 
+        model: Intrest, 
+        populate: {
+          path: 'name', 
+        }
+      });
+      return user.Interests; 
+    } catch (error) {
+     
+      console.error(error);
+      throw error; 
+    }
+}
+
+export async function deleteuserintrest(userId : string , intrestId : string) {
+  ConnenctToDB();
+  try {
+    // البحث عن المستخدم بناءً على userId
+    const user = await User.findById(userId);
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // إزالة الاهتمام من القائمة
+    user.Interests = user.Interests.filter((item:any) => item.toString() !== intrestId);
+
+    // حفظ التغييرات في المستخدم
+    await user.save();
+
+    return user.Interests; // إرجاع القائمة المحدثة للاهتمامات
+  } catch (error) {
+    console.error(error);
+    throw error; // أعد رمي الخطأ ليتم التعامل معه في مكان آخر
+  }
+}

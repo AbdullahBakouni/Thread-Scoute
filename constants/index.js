@@ -1,3 +1,4 @@
+import { FcStatistics } from "react-icons/fc";
 export const sidebarLinks = [
     {
       imgURL: "/assets/home.svg",
@@ -28,6 +29,11 @@ export const sidebarLinks = [
       imgURL: "/assets/user.svg",
       route: "/profile",
       label: "Profile",
+    },
+    {
+      imgURL: "/assets/statistic.png",
+      route: "/statistic",
+      label: "Statistic",
     },
   ];
   

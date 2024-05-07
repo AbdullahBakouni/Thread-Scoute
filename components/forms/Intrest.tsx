@@ -31,7 +31,6 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "../ui/input";
-// import { items } from "@/constants";
 import { startTransition, useEffect, useState } from "react";
 import { fetchUser, insertintrest } from "@/lib/actions/user.action";
 import { createCategory, getAllCategories } from "@/lib/actions/intrest.action";
@@ -70,30 +69,18 @@ const Intrest =  ({userId}:props) => {
   
       getCategories();
     }, [])
-    // useEffect(() => {
-    //   const fetchuser = async () => {
-    //     const userInfo = await fetchUser(userId);
-    //   }
-  
-    //   fetchuser();
-    // }, [])
   
     const form = useForm<z.infer<typeof FormSchema>>({
         resolver: zodResolver(FormSchema),
         defaultValues: {
-            // items : selectedItems
-            // items: [] as object[],
             items: selectedItems.map((item) => item._id),
         }
       })
         async  function onSubmit(data: z.infer<typeof FormSchema>) {
             await insertintrest(userId , selectedItems);
-            // const userInfo = await fetchUser(userId);
             setShowForm(false);
       }
-      // useEffect(() => {
-      //   form.handleSubmit(onSubmit);
-      // }, [form, onSubmit])
+   
       return (
         <>
           

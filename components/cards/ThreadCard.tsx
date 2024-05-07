@@ -5,8 +5,9 @@ import LikeButton from "../shared/LikeButton";
 import ShareButton from "../shared/ShareButton";
 import { Button } from "../ui/button";
 import { useRouter } from 'next/router'
-import { showless, showmore } from "@/lib/actions/user.action";
+import { fetchUser, showless, showmore } from "@/lib/actions/user.action";
 import FollowBlockCard from "./FollowBlockCard";
+import { currentUser } from "@clerk/nextjs";
 interface props {
     id: string;
     currentuserId: string;
@@ -33,7 +34,7 @@ interface props {
     isHomePage?: boolean
   }
 
-    const ThreadCard = ({
+    const ThreadCard = async ({
         id,
         currentuserId,
         parentId,
@@ -46,10 +47,14 @@ interface props {
         iscomment,
         isHomePage
     }:props) => { 
+      const user = await currentUser();
+      if(!user) return null;
+      const userInfo = await fetchUser(user?.id || "");
+      const data = {
+        threadId :id.toString(),
+        userId : userInfo?._id.toString()
+      };
 
-      // const handleclickmore () =>{
-
-      // }
     return (
       <article className={`flex flex-col w-full  rounded-xl  ${iscomment ? 
             "px-0 xs:px-7" : "bg-dark-2 p-7"}`}>
@@ -76,7 +81,7 @@ interface props {
                 <div className="flex flex-col mt-5 gap-3">
                     <div className="flex gap-3.5">
 
-                       <LikeButton initialLikes={likes} threadId={id} userId = {currentuserId}/>
+                       <LikeButton initialLikes={likes} data = {data}/>
 
 
                         <Link href={`/thread/${id}`}>
@@ -88,7 +93,7 @@ interface props {
                         className="cursor-pointer object-contain"
                         />
                         </Link>
-                        <ShareButton postId = {id} currentUser = {currentuserId}/>
+                        <ShareButton postId = {data.threadId} currentUser = {currentuserId}/>
                     </div>
                     {iscomment && comments.length > 0 && (
                         <Link href={`/thread/${id}`}>

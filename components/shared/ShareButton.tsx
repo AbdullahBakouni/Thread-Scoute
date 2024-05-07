@@ -25,12 +25,16 @@ const ShareButton =   ({postId , currentUser}:params) => {
           return;
         }
         const newUser = await fetchUserByName(user);
+        const userdata = {
+          id : newUser.id.toString(),
+          objectid: newUser._id.toString()
+        }
         if (!newUser) {
           alert('User not found');
           return;
         }
         await savepostshared(currentUser,postId);
-        await addpostshared(newUser.id , currentUser , postId);
+        await addpostshared(userdata.id , currentUser , postId);
         setIsOpen(false); // إغلاق الـ Popover بعد النجاح
     }
 

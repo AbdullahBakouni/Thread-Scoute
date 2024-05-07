@@ -61,6 +61,12 @@ const userSchema = new mongoose.Schema({
         type : Number,
         default : 0
        },
+       Userwholikes : [ 
+        {
+        type : mongoose.Schema.Types.ObjectId,
+          ref : "User"
+       }
+    ]
 });
 
 const User = mongoose.models.User || mongoose.model("User", userSchema);
