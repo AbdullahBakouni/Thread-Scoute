@@ -30,6 +30,8 @@ const Taggedtab = async ({currentUserId,accountType}:props) => {
         createdAt={re.createdAt}
         comments={re.children}
         likes = {re.LikeCount}
+        shares = {re.ShareCount}
+        tags = {re.tags}
       />
     ))}
   </section>

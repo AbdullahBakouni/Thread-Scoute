@@ -49,6 +49,12 @@
   .user-card_btn {
     @apply h-auto min-w-[74px] rounded-lg bg-primary-500 text-[12px] text-light-1 !important;
   }
+  .user-card_btn-create {
+    @apply h-auto min-w-[60px] rounded-lg bg-primary-500 text-[10px] text-light-1 !important;
+  }
+  .user-card_btn-delete {
+    @apply h-auto min-w-[74px] rounded-lg bg-red-500 text-[12px] text-light-1 !important;
+  }
 
   .searchbar {
     @apply flex gap-1 rounded-lg bg-dark-3 px-4 py-2;

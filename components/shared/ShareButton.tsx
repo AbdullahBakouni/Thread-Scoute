@@ -9,13 +9,14 @@ import {
 import { Input } from '../ui/input'
 import { addpostshared, fetchUserByName, savepostshared } from '@/lib/actions/user.action';
 import { useState } from 'react';
-
+import { usePathname } from 'next/navigation';
 interface params {
     postId : string;
     currentUser : string;
 }
 
 const ShareButton =   ({postId , currentUser}:params) => {
+  const path = usePathname();
     const [user,setUser] = useState("");
     const [isOpen, setIsOpen] = useState(false);
     
@@ -33,7 +34,7 @@ const ShareButton =   ({postId , currentUser}:params) => {
           alert('User not found');
           return;
         }
-        await savepostshared(currentUser,postId);
+        await savepostshared(currentUser,postId,path);
         await addpostshared(userdata.id , currentUser , postId);
         setIsOpen(false); // إغلاق الـ Popover بعد النجاح
     }

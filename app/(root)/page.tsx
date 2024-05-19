@@ -29,6 +29,8 @@ export default async function Home() {
                                    createdAt = {post.createdAt}
                                    comments = {post.children}
                                    likes = {post.LikeCount}
+                                   shares = {post.ShareCount}
+                                   tags = {post.tags}
                                    isHomePage
                                    />
                                    

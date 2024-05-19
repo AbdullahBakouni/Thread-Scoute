@@ -4,8 +4,9 @@ import User from "../models/user.model";
 import { ConnenctToDB } from "../mongoose";
 import Thread from "../models/thread.model";
 import { error } from "console";
-import mongoose, { FilterQuery, SortOrder } from "mongoose";
+import mongoose, { Connection, FilterQuery, SortOrder } from "mongoose";
 import Intrest from "../models/intrest";
+import Community from "../models/Community.model";
 
 interface params {
     userId : string;
@@ -58,37 +59,38 @@ export async function fetchUser (userId:string){
         }
 }
 
-export async function fetchUserPosts(id: string) {
-    try {
-        ConnenctToDB();
-        console.log("Database connection established.");
-      // Find all threads authored by the user with the given userId
-  //     const user = await User.findOne({ id: id });
-  // console.log("User fetched:", user);
-      const Threads =  await User.findOne({ id: id }).populate({
-        path: "Threads",
-        model: Thread,
-        populate: 
-          {
-            path: "children",
-            model: Thread,
-            populate: {
-              path: "author",
-              model: User,
-              select: "name image id", // Select the "name" and "_id" fields from the "User" model
-            },
+export async function fetchUserPosts(userId: string) {
+  try {
+    ConnenctToDB();
+
+    // Find all threads authored by the user with the given userId
+    const threads = await User.findOne({ id: userId }).populate({
+      path: "threads",
+      model: Thread,
+      options: { sort: { 'createdAt': -1 } },
+      populate: [
+        {
+          path: "community",
+          model: Community,
+          select: "name id image _id", // Select the "name" and "_id" fields from the "Community" model
+        },
+        {
+          path: "children",
+          model: Thread,
+          populate: {
+            path: "author",
+            model: User,
+            select: "name image id", // Select the "name" and "_id" fields from the "User" model
           },
-        
-      });
-      // const threads = await threadsquery.exec();
-      // console.log("Threads populated:", Threads);
-      return Threads;
-    } 
-    catch (error) {
-      console.error("Error fetching user threads:", error);
-      throw error;
-    }
+        },
+      ],
+    });
+    return threads;
+  } catch (error) {
+    console.error("Error fetching user threads:", error);
+    throw error;
   }
+}
   export async function insertintrest(id:string, interests:object[]) {
     ConnenctToDB();
 
@@ -111,9 +113,12 @@ export async function fetchUserPosts(id: string) {
   }
   }
 
-  export async function savepostshared(currentUserId:string,postId:string){
-    ConnenctToDB();
+  export async function savepostshared(currentUserId:string,postId:string,path?:string){
+    if(path === undefined){
+      throw new Error("Path is required")
+    }
   try {
+    ConnenctToDB();
         const user  = await User.findOne({ id: currentUserId });
         const post = await Thread.findOne({ _id: postId });
         if(user && post){
@@ -122,6 +127,7 @@ export async function fetchUserPosts(id: string) {
           post.sharedby.push(user._id)
           await post.save();
           await user.save();
+          revalidatePath(path)
         }
   } catch (error) {
     throw new Error (`Failed to save shaer post ${error}`)
@@ -266,7 +272,8 @@ export async function getuserrecievedthreads(userId:string){
   try {
     const user = await User.findById(userId) // استخدم findById للبحث عن المستخدم بالـ id
     .populate({
-      path: 'ReceiveThreads', // تحديد الحقل للـ populate
+      path: 'ReceiveThreads',
+      options: { sort: { 'createdAt': -1 } },
       populate: {
         path: 'author', // تحديد الحقل داخل recievedthreads للـ populate
         select: 'id name image' // تحديد الحقول التي تريد جلبها من الكاتب
@@ -289,6 +296,19 @@ export async function getmostlikedfivethreads(userId:string){
   try {
     return Thread.find({ author: userId})
     .sort({ LikeCount: -1 }) // ترتيب تنازلي حسب عدد الإعجابات
+    .limit(5)
+    .populate('author', 'name image id') // الحصول على أعلى 5 نتائج فقط
+    .exec(); // تنف
+  } catch (error) {
+    console.error('Error fetching user recieved threads:', error);
+                    throw error;
+  }
+}
+export async function getmostsharedfivethreads(userId:string){
+  ConnenctToDB();
+  try {
+    return Thread.find({ author: userId})
+    .sort({ ShareCount: -1 }) // ترتيب تنازلي حسب عدد الإعجابات
     .limit(5)
     .populate('author', 'name image id') // الحصول على أعلى 5 نتائج فقط
     .exec(); // تنف
@@ -506,6 +526,7 @@ export async function getshareactivity(userId:string) {
       const share = await User.findById(userId)
       .populate({
         path: "ReceiveThreads",
+        options: { sort: { 'createdAt': -1 } }, 
         populate: {
           path: "sharedby",
           model: User,
@@ -518,3 +539,218 @@ export async function getshareactivity(userId:string) {
     throw error;
   }
 }
+
+export async function getusercommunities(userId:string){
+  try {
+      ConnenctToDB(); 
+
+      const user = await User.findById(userId)
+    .populate({
+        path: "communities",
+        model: Community,
+        select: "name image id createdBy bio",
+        populate: {
+          path: "createdBy",
+          model: User,
+          select: "name image id",
+        },
+      });
+      const communities = user.communities;
+      const communityCount = communities.length;
+      const communityInfo = communities.map((community:any) => ({
+        name: community.name,
+        image: community.image,
+        id: community._id,
+        bio:community.bio,
+        createdBy: {
+          name: community.createdBy.name,
+          image: community.createdBy.image,
+          id: community.createdBy._id,
+        },
+      }));
+      return { communityCount, communityInfo };
+}
+catch (error) {
+  console.error("Error fetching recievethreads: ", error);
+  throw error;
+}
+}
+export async function getCommunities(userId: string) {
+  try {
+    await ConnenctToDB(); 
+    const communities = await Community.find({ createdBy: userId }).select(" name image bio");
+    console.log(`Communities found: ${communities.length}`);
+
+    return communities // This will return only the communities, not the user object
+  } catch (error) {
+    console.error(error);
+    throw error; // It's good practice to throw the error so it can be handled by the caller
+  }
+}
+export async function fetchUsersByUsername(usernames: string[]) {
+  // تأكد من أن هذه هي الدالة الصحيحة للاتصال بقاعدة البيانات الخاصة بك
+
+  try {
+    await ConnenctToDB();
+    // استخدم 'find' مع عامل '$in' للحصول على جميع المستخدمين ذوي الأسماء المستعارة المعطاة
+    const users = await User.find({ username: { $in: usernames } }).select("_id");
+
+    // إرجاع مصفوفة تحتوي على '_id' لكل مستخدم
+    return users.map(user => user._id);
+  } catch (error:any) {
+    throw new Error(`فشل في جلب المستخدمين: ${error.message}`);
+  }
+}
+export async function fetchuseradmin(usernames: string[],userId:string) {
+  // Make sure this is the correct function to connect to your database
+  
+  try {
+   ConnenctToDB();
+   // Use 'find' with the '$in' operator to get all users with the given usernames
+   const users = await User.find({ username: { $in: usernames } }).select("id username invitionasadmin");
+
+   // Assuming 'invitationsMember' is an array in your schema where you want to push the user IDs
+   for (const user of users) {
+     // Check if 'invitionasmember' is undefined or not an array, and initialize it as an array if necessary
+     if (!Array.isArray(user.invitionasadmin)) {
+       user.invitionasadmin = [];
+     }
+
+     // Now you can safely push the userId to the 'invitionasmember' array
+     user.invitionasadmin.push(userId);
+
+     // Save the updated user document
+     await user.save();
+   }
+   // Return the array of objects with username and userId
+ } catch (error: any) {
+   throw new Error(`Failed to fetch users and update invitations: ${error}`);
+ }
+}
+export async function getInvitationsWithCommunities(userId: string) {
+  try {
+    await ConnenctToDB();
+
+    // البحث في موديل Community عن السجلات التي تحتوي على userId ضمن intivitionasmembers
+    const communitiesWithInvitations = await Community.find({
+      intivitionasmembers: userId
+    }).populate('createdBy', 'username image')
+    .sort({ createdAt: -1 }); // تعديل هنا لجلب معلومات createdBy
+
+    // إرجاع المجتمعات التي تحقق الشرط مع معلومات createdBy
+    return communitiesWithInvitations;
+  } catch (error) {
+    console.error('Error fetching invitations and communities:', error);
+    throw error;
+  }
+}
+export async function removeintivitionasmember(userId: string,path:string) {
+  try {
+    await ConnenctToDB();
+
+    // Find the community that includes the userId in intivitionasmembers
+    const community = await Community.findOne({
+      intivitionasmembers: userId
+    });
+
+    if (community) {
+      // Remove the userId from intivitionasmembers
+      await Community.updateOne(
+        { _id: community._id },
+        { $pull: { intivitionasmembers: userId } }
+      );
+
+      // Optionally, refetch the updated community info if needed
+      const updatedCommunity = await Community.findById(community._id).populate('createdBy', 'username image');
+
+      // Return the updated community info
+      await community.save();
+      revalidatePath(path);
+    } else {
+      // Handle the case where no community is found
+      console.log('No community found with the given userId in intivitionasmembers');
+      return null;
+    }
+  } catch (error) {
+    console.error('Error updating community information:', error);
+    throw error;
+  }
+}
+export async function removeintivitionasadmin(userId: string,path:string) {
+  try {
+    await ConnenctToDB();
+
+    // Find the community that includes the userId in intivitionasmembers
+    const community = await Community.findOne({
+      intivitionasadmins: userId
+    });
+
+    if (community) {
+      // Remove the userId from intivitionasmembers
+      await Community.updateOne(
+        { _id: community._id },
+        { $pull: { intivitionasadmins: userId } }
+      );
+
+      // Optionally, refetch the updated community info if needed
+      const updatedCommunity = await Community.findById(community._id).populate('createdBy', 'username image');
+
+      // Return the updated community info
+      await community.save();
+      revalidatePath(path);
+    } else {
+      // Handle the case where no community is found
+      console.log('No community found with the given userId in intivitionasmembers');
+      return null;
+    }
+  } catch (error) {
+    console.error('Error updating community information:', error);
+    throw error;
+  }
+}
+
+
+export async function getInvitationsWithCommunitiesaddmins(userId: string) {
+  try {
+    await ConnenctToDB();
+
+    // البحث في موديل Community عن السجلات التي تحتوي على userId ضمن intivitionasmembers
+    const communitiesWithInvitations = await Community.find({
+      intivitionasadmins: userId
+    }).populate('createdBy', 'username image id')
+    .sort({ createdAt: -1 }); // تعديل هنا لجلب معلومات createdBy
+
+    // إرجاع المجتمعات التي تحقق الشرط مع معلومات createdBy
+    return communitiesWithInvitations;
+  } catch (error) {
+    console.error('Error fetching invitations and communities:', error);
+    throw error;
+  }
+}
+
+export async function removeUserFromRequestedJoin(communityId: string, userId: string,path:string) {
+  try {
+    // Connect to the database
+    ConnenctToDB();
+
+    // Find the community by ID
+    const community = await Community.findById(communityId);
+
+    if (!community) {
+      throw new Error('Community not found');
+    }
+
+    // Remove the user ID from the requestedjoin array
+    community.requestedjoin.pull(userId);
+
+    // Save the updated community
+    await community.save();
+    revalidatePath(path);
+  } catch (error) {
+    console.error("Error removing user from requestedjoins in community: ", error);
+    throw error;
+  }
+}
+
+
+

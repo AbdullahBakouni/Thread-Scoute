@@ -25,6 +25,7 @@ const page = async ({params} : {params : {id : string}}) => {
             name = {userInfo.name}
             username = {userInfo.username}
             bio = {userInfo.bio}
+            type="User"
         />
         <div className="mt-9">
             <Tabs defaultValue="threads" className="w-full">
@@ -42,7 +43,7 @@ const page = async ({params} : {params : {id : string}}) => {
 
                             {tab.label === "Threads" && (
                            <p className="ml-1 rounded-sm bg-light-4 px-2 py-1 !text-tiny-medium text-light-2">
-                            {userInfo?.Threads?.length}
+                            {userInfo?.threads?.length}
                            </p>
                             )}
                         </TabsTrigger>

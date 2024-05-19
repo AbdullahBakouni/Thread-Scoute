@@ -204,7 +204,7 @@ const {startUpload} = useUploadThing("media");
           </FormItem>
         )}
       />
-      <Button type="submit" className="bg-primary-500">Submit</Button>
+      <Button type="submit" className="bg-primary-500">{btnTitle}</Button>
     </form>
   </Form>
   )

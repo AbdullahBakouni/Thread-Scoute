@@ -48,18 +48,8 @@ export const sidebarLinks = [
     { value: "members", label: "Members", icon: "/assets/members.svg" },
     { value: "requests", label: "Requests", icon: "/assets/request.svg" },
   ];
-
-  export const items = [
-    {
-      id: "nextjs",
-      label: "NextJS",
-    },
-    {
-      id: "react",
-      label: "React",
-    },
-    {
-      id: "typescript",
-      label: "TypeScript",
-    },
+  export const activitytab = [
+    { value: "comments", label: "Comments", icon: "/assets/reply.svg" },
+    { value: "share", label: "Shares", icon: "/assets/share.svg" },
+    { value: "communities", label: "Communities", icon: "/assets/community.svg" },
   ];

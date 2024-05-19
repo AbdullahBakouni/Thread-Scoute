@@ -1,5 +1,5 @@
 import ThreadCard from "@/components/cards/ThreadCard"
-import { fetchPostbyId } from "@/lib/actions/thread.action";
+import { fetchThreadById } from "@/lib/actions/thread.action";
 import { fetchUser } from "@/lib/actions/user.action";
 import { currentUser } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
@@ -14,7 +14,7 @@ const page = async ({params} : {params: {id:string}}) => {
     const userInfo = await fetchUser(user.id);
     if(!userInfo?.onboarded) redirect("/onboarded");
 
-    const post = await fetchPostbyId(params.id);
+    const post = await fetchThreadById(params.id);
     console.log(post)
   return (
     <section className="relative ">
@@ -30,6 +30,8 @@ const page = async ({params} : {params: {id:string}}) => {
             createdAt = {post.createdAt}
             comments = {post.children}
             likes = {post.LikeCount}
+            shares={post.ShareCount}
+            tags={post.tags}
         />
       </div>
 
@@ -55,6 +57,8 @@ const page = async ({params} : {params: {id:string}}) => {
               comments = {childItem.children}
               iscomment
               likes={childItem.LikeCount}
+              shares={childItem.ShareCount}
+
              />
         ))}
       </div>

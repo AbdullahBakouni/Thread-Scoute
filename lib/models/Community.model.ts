@@ -1,10 +1,6 @@
 import mongoose from "mongoose";
 
 const communitySchema = new mongoose.Schema({
-  id: {
-    type: String,
-    required: true,
-  },
   username: {
     type: String,
     unique: true,
@@ -14,6 +10,13 @@ const communitySchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  slugurl: {
+    type: String,
+  },
+  createdAt : {
+    type : Date,
+    default : Date.now
+   },   
   image: String,
   bio: String,
   createdBy: {
@@ -30,8 +33,32 @@ const communitySchema = new mongoose.Schema({
     {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+    }
+  ],
+  requestedjoin: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
     },
   ],
+    intivitionasmembers: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+  ],
+  intivitionasadmins: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+],
+admins: [
+  {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+  },
+],
 });
 
 const Community =

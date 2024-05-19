@@ -7,7 +7,7 @@ const userSchema = new mongoose.Schema({
     name:{type : String , required : true},
     image:{type : String},
     bio:{type : String},
-    Threads : [
+    threads : [
         {
             type : mongoose.Schema.Types.ObjectId,
             ref : "Thread"
@@ -66,7 +66,26 @@ const userSchema = new mongoose.Schema({
         type : mongoose.Schema.Types.ObjectId,
           ref : "User"
        }
-    ]
+    ],
+    requests : [ 
+        {
+        type : mongoose.Schema.Types.ObjectId,
+          ref : "Community",
+       },
+    ],
+    invitionasmember :   [ 
+        {
+        type : mongoose.Schema.Types.ObjectId,
+          ref : "User"
+       }
+    ],
+    invitionasadmin :   [ 
+        {
+        type : mongoose.Schema.Types.ObjectId,
+          ref : "User"
+       }
+    ],
+
 });
 
 const User = mongoose.models.User || mongoose.model("User", userSchema);

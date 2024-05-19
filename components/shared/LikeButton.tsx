@@ -56,7 +56,7 @@ const LikeButton =  ({data,initialLikes}:props) => {
         <>
             <button className="bg-transparent" onClick={handleLike}>
                 <CiHeart  className={`cursor-pointer object-contain text-heading3-bold ${liked ? 'text-red-500' : 'text-gray-500'}`} />
-                <span>{likes}</span>
+                
             </button>
         </>
     )

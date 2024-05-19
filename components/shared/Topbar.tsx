@@ -1,16 +1,29 @@
-import { OrganizationSwitcher, SignOutButton, SignedIn } from '@clerk/nextjs'
+import { OrganizationSwitcher, SignOutButton, SignedIn, currentUser } from '@clerk/nextjs'
 import Image from 'next/image'
 import Link from 'next/link'
-import React from 'react'
-import { dark } from '@clerk/themes'
-const Topbar = () => {
+import Communitiesswitcher from './Communitiesswitcher'
+import { fetchUser, getCommunities, getusercommunities } from '@/lib/actions/user.action'
+import { redirect } from 'next/navigation'
+const Topbar = async () => {
+  const user =  await currentUser();
+
+    if(!user) return null;
+
+    const userInfo = await fetchUser(user.id); //to fetch another user if we want to desplay her profile page not juset the user who log in
+    if(!userInfo.onboarded) redirect("/onboarding");
+    const usercommunities = await getCommunities(userInfo._id);
+    const data = {
+      userId : userInfo._id.toString(),
+      username : userInfo.name,
+      userimage : userInfo.image,
+    }
   return (
     <nav className='topbar'>
         <Link href="/" className='flex items-center gap-4'>
               <Image 
                 src="/assets/Thread.jpg"
-                width={65}
-                height={65}
+                width={40}
+                height={40}
                 alt='logo'
                 className='rounded-full shadow'
               />
@@ -31,14 +44,8 @@ const Topbar = () => {
                         </SignOutButton>
                     </SignedIn>
               </div>
-              <OrganizationSwitcher 
-                appearance={{
-                  baseTheme : dark,
-                  elements : {
-                    organizationSwitcherTrigger :
-                    "py-2 px-2"
-                  }
-                }}
+               <Communitiesswitcher datauser = {data} 
+                  commdata = { JSON.parse(JSON.stringify(usercommunities))}
               />
         </div>
     </nav>

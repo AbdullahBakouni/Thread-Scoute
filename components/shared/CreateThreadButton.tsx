@@ -1,4 +1,9 @@
-"use client";
+"use client"
+import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle, DrawerTrigger } from '../ui/drawer'
+import { Label } from '../ui/label'
+import { Input } from '../ui/input'
+import { Textarea } from '../ui/textarea'
+import { ThreadValidation } from '@/lib/validations/thread'
 
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -14,66 +19,60 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
-import { Textarea } from "../ui/textarea";
-import { usePathname,useRouter } from "next/navigation";
-import { ThreadValidation } from "@/lib/validations/thread";
-import { createThread } from "@/lib/actions/thread.action";
-import { Input } from "../ui/input";
-import { useState } from "react";
- interface props  {
-    user:{
-        id : string;
-        objectId : string;
-        username : string;
-        name : string;
-        bio : string;
-        image : string;
-    };
-    btnTitle : string;
+import { useState } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
+import { createThread } from '@/lib/actions/thread.action'
+interface props {
+    communityid:string;
+    userId:string;
 }
-
-
-
-const PostThread = ({userId} : {userId :string}) => {
-const router = useRouter();
+const CreateThreadButton = ({communityid,userId}:props) => {
+    const router = useRouter();
 const pathname = usePathname();
-const { organization } = useOrganization();
 const [value, setValue] = useState('');
-
-
     const form = useForm({
         resolver : zodResolver(ThreadValidation),
         defaultValues :{
             thread : "",
-            accountId : userId,
+            accountId : communityid,
             tags : ""
         }
     })
     const handleChange = (event:any) => {
-      let newValue = event.target.value;
-      // Check if the last character is a space and add # symbol
-      if (newValue.endsWith(' ')) {
-        newValue += '#';
+        let newValue = event.target.value;
+        // Check if the last character is a space and add # symbol
+        if (newValue.endsWith(' ')) {
+          newValue += '#';
+        }
+        // Ensure that the # symbol is always at the start of each word
+        newValue = newValue.replace(/(^|\s)#?/g, '$1#');
+        setValue(newValue);
       }
-      // Ensure that the # symbol is always at the start of each word
-      newValue = newValue.replace(/(^|\s)#?/g, '$1#');
-      setValue(newValue);
-    }
-    const onSubmit = async (values : z.infer<typeof ThreadValidation>) =>{
-      const sanitizedValue = value.replace(/#/g, '');
-    const tagsArray = sanitizedValue.split(' ').filter(tag => tag !== '');
-        await createThread({
-          text : values.thread,
-          tags : tagsArray,
-          author : userId,
-          communityId: null,
-          path : pathname
-        });
-        
-        router.push("/");
-    }
+      const onSubmit = async (values : z.infer<typeof ThreadValidation>) =>{
+        const sanitizedValue = value.replace(/#/g, '');
+      const tagsArray = sanitizedValue.split(' ').filter(tag => tag !== '');
+          await createThread({
+            text : values.thread,
+            tags : tagsArray,
+            author : userId,
+            communityId: communityid,
+            path : pathname
+          });
+          
+          router.push("/");
+      }
   return (
-    <Form {...form}>
+    <div>
+      <Drawer>
+      <DrawerTrigger asChild>
+        <Button className='user-card_btn'>CreateThread</Button>
+      </DrawerTrigger>
+      <DrawerContent className = "bg-dark-2 text-light-1 border-none">
+        <DrawerHeader>
+          <DrawerTitle>Create Thread</DrawerTitle>
+        </DrawerHeader>
+        <div className="px-4 py-6 sm:px-6">
+        <Form {...form}>
     <form onSubmit={form.handleSubmit(onSubmit)} 
     className="flex flex-col justify-start gap-4 mt-10">
         <FormField
@@ -86,7 +85,7 @@ const [value, setValue] = useState('');
             </FormLabel>
             <FormControl className="no-focus border border-dark-4 bg-dark-3 text-light-1">
               <Textarea
-                rows={10}
+                rows={7}
                 className="account-form_input no-focus" 
                 {...field}
               />
@@ -108,7 +107,6 @@ const [value, setValue] = useState('');
                 type="text"
                 className="no-focus" 
                 value = {value}
-                // {...field}
                 onChange={handleChange}
                 placeholder="Type here..."
               />
@@ -122,8 +120,11 @@ const [value, setValue] = useState('');
       </Button>
     </form>
     </Form>
-    
+        </div>
+      </DrawerContent>
+    </Drawer>
+    </div>
   )
 }
 
-export default PostThread
+export default CreateThreadButton

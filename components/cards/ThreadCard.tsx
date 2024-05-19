@@ -8,6 +8,8 @@ import { useRouter } from 'next/router'
 import { fetchUser, showless, showmore } from "@/lib/actions/user.action";
 import FollowBlockCard from "./FollowBlockCard";
 import { currentUser } from "@clerk/nextjs";
+import { formatDateString } from "@/lib/utils";
+import DeleteThread from "../forms/DeleteThread";
 interface props {
     id: string;
     currentuserId: string;
@@ -30,7 +32,9 @@ interface props {
       };
     }[];
     iscomment?: boolean;
-    likes : number;
+    likes? : number;
+    shares? : number;
+    tags?:[string];
     isHomePage?: boolean
   }
 
@@ -45,7 +49,9 @@ interface props {
         comments,
         likes,
         iscomment,
-        isHomePage
+        isHomePage,
+        shares,
+        tags
     }:props) => { 
       const user = await currentUser();
       if(!user) return null;
@@ -76,14 +82,23 @@ interface props {
                 <Link href={`/profile/${author.id}`} className="w-fit ">
                     <h4 className="text-light-1 text-base-semibold cursor-pointer">{author.name}</h4>
                 </Link>
-                <p className="mt-2 text-small-regular text-light-2">{content}</p>
-
+                    <div className="flex justify-between items-center">
+                    <div>
+                    <p className="mt-2 text-small-regular text-light-2">{content}</p>
+                    </div>
+                    <div className="text-gray-1">
+                          {tags && tags.map((tag) => (
+                            <span key={tag}>
+                              #{tag}
+                            </span>
+                          ))}
+                        </div>
+                    </div>
                 <div className="flex flex-col mt-5 gap-3">
-                    <div className="flex gap-3.5">
+                    <div className="flex gap-3.5 justify-between">
 
-                       <LikeButton initialLikes={likes} data = {data}/>
-
-
+                        <div className="flex gap-3">
+                        <LikeButton  data = {data} initialLikes={likes || 0}/>
                         <Link href={`/thread/${id}`}>
                         <Image 
                         src="/assets/reply.svg"
@@ -93,25 +108,81 @@ interface props {
                         className="cursor-pointer object-contain"
                         />
                         </Link>
-                        <ShareButton postId = {data.threadId} currentUser = {currentuserId}/>
+                        <ShareButton postId = {data.threadId} currentUser = {currentuserId.toString()}/>
+                        </div>
+                        <div className=" flex gap-2 text-base-medium text-gray-1">
+                         Likes.{likes}  shares.{shares}
+                        </div>
                     </div>
                     {iscomment && comments.length > 0 && (
-                        <Link href={`/thread/${id}`}>
-                            <p className="mt-1 text-subtle-medium text-gray-1">{comments.length} Replies</p>
-                        </Link>
-                    )}
-
+                <Link href={`/thread/${id}`}>
+                  <p className='mt-1 text-subtle-medium text-gray-1'>
+                    {comments.length} repl{comments.length > 1 ? "ies" : "y"}
+                  </p>
+                </Link>
+              )}
                 </div>
-                {isHomePage && (
+           </div>
+        </div>
+        {/* <DeleteThread
+          threadId={JSON.stringify(id)}
+          currentUserId={currentuserId.toString()}
+          authorId={author.id}
+          parentId={parentId}
+          isComment={iscomment}
+        /> */}
+      </div>
+      {!iscomment && comments.length > 0 && (
+        <div className='ml-1 mt-3 flex items-center gap-2'>
+         {isHomePage && (
+      <>
+    {comments.slice(0, 2).map((comment, index) => (
+      <Image
+        key={index}
+        src={comment.author.image}
+        alt={`user_${index}`}
+        width={24}
+        height={24}
+        className={`${index!== 0 && "-ml-5"} rounded-full object-cover`}
+      />
+    ))}
+    </>
+    )}
+         
+
+          <Link href={`/thread/${id}`}>
+            <p className='mt-1 text-subtle-medium text-gray-1'>
+              {comments.length} repl{comments.length > 1 ? "ies" : "y"}
+            </p>
+          </Link>
+        </div>
+      )}
+             {!iscomment && community && (
+                <Link
+                  href={`/communities/${community.id}`}
+                  className='mt-5 flex items-center'
+                >
+                  <p className='text-subtle-medium text-gray-1'>
+                    {formatDateString(createdAt)}
+                    {community && ` - ${community.name} Community`}
+                  </p>
+
+                  <Image
+                    src={community.image}
+                    alt={community.name}
+                    width={14}
+                    height={14}
+                    className='ml-1 rounded-full object-cover'
+                  />
+                </Link>
+              )} 
+               {isHomePage && (
           <FollowBlockCard
             author={author.id}
             currentuser={currentuserId}
             isHomePage={isHomePage}
         />
       )}
-           </div>
-     </div>
-  </div>
       </article>
     )
     }
