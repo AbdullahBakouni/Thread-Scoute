@@ -8,6 +8,7 @@ import User from "../models/user.model";
 
 import { ConnenctToDB } from "../mongoose";
 import { revalidatePath } from "next/cache";
+import { fetchUser, getuserintrests } from "./user.action";
 
   interface params {
     name : string;
@@ -338,7 +339,6 @@ export async function changeadmintomember(communityId:string,userId:string,path?
 export async function removeUserFromCommunity(
   userId: string,
   communityId: string,
-  path:string,
 ) {
   try {
     ConnenctToDB();
@@ -367,7 +367,7 @@ export async function removeUserFromCommunity(
       { _id: userIdObject._id },
       { $pull: { communities: communityIdObject._id } }
     );
-    revalidatePath(path)
+   
     return { success: true };
     
   } catch (error) {
@@ -616,6 +616,108 @@ export async function getusercommunitiescount(userId: string,path:string) {
      // This will return an array of community IDs
   } catch (error) {
     console.error("Error fetching user communities: ", error);
+    throw error;
+  }
+}
+
+
+export async function fetchsuggestedcommunities({
+  userId,
+  searchString = "",
+  pageNumber = 1,
+  pageSize = 20,
+  sortBy = "desc",
+  
+}: {
+  userId:string
+  searchString?: string;
+  pageNumber?: number;
+  pageSize?: number;
+  sortBy?: SortOrder;
+  
+}){
+  interface CommunityQuery {
+    $or?: Array<{
+      name?: { $regex?: RegExp };
+      username?: { $regex?: RegExp };
+      bio?: { $regex?: RegExp };
+      slugurl?: { $regex?: RegExp };
+      _id?: { $in?: string[] };
+    }>;
+    $and?: Array<{
+      _id?: { $nin?: string[] };
+      $or?: Array<{
+        name?: { $regex?: RegExp };
+        username?: { $regex?: RegExp };
+        bio?: { $regex?: RegExp };
+        slugurl?: { $regex?: RegExp };
+      }>;
+    }>;
+  }
+  try {
+    ConnenctToDB();
+    const user = await fetchUser(userId)
+    const userintrests = await getuserintrests(user._id)
+    const userintrestname = userintrests.map((item:any) => item.name);
+
+    const skipAmount = (pageNumber - 1) * pageSize;
+    const interestsRegex = new RegExp(userintrestname.join('|'), 'i');
+
+    const excludedCommunities = await Community.find({
+      $or: [
+        { members: user._id},
+        { createdBy: user._id },
+      ]
+    }).select('_id');
+    const excludedCommunityIds = excludedCommunities.map(community => community._id);
+    let query: CommunityQuery = {
+      $and: [
+        { _id: { $nin: excludedCommunityIds } },
+      ],
+    };
+
+    if (userintrestname.length > 0) {
+      query.$and??= [];
+      query?.$and.push({
+        $or: [
+          { name: { $regex: interestsRegex } },
+          { username: { $regex: interestsRegex } },
+          { bio: { $regex: interestsRegex } },
+          { slugurl: { $regex: interestsRegex } },
+        ],
+      });
+      const postsWithInterests = await Thread.find({ text: { $regex: interestsRegex } }).select('community');
+      const communityIds = postsWithInterests.map(post => post.community);
+    
+    if (communityIds.length > 0) {
+      query.$or = [{ _id: { $in: communityIds } }];
+    }
+  }
+    const matchingCommunitiesCount = await Community.countDocuments(query);
+    console.log(matchingCommunitiesCount)
+      if(matchingCommunitiesCount === 0){
+        query = {
+          $and: [
+            { _id: { $nin: excludedCommunityIds } },
+             
+          ],
+        };
+      }
+      const sortOptions = { createdAt: sortBy };
+    const communitiesQuery = Community.find(query)
+      .sort(sortOptions)
+      .skip(skipAmount)
+      .limit(pageSize)
+      .populate("members");
+
+    const totalCommunitiesCount = await Community.countDocuments(query);
+    const communities = await communitiesQuery.exec();
+    const isNext = totalCommunitiesCount > skipAmount + communities.length;
+      // console.log(communities)
+    return { communities, isNext };
+    }
+   catch (error) {
+    console.error("Error fetching communities:", error);
     throw error;
   }
 }

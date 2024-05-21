@@ -49,7 +49,8 @@ const Intrest =  ({userId}:props) => {
   const [showForm, setShowForm] = useState(true);
     const [selectedItems, setSelectedItems] = useState<ICategory[]>([]);
     const [newintrest, setNewIntrest] = useState("");
-    
+    const [userInterests, setUserInterests] = useState<string[]>([]);
+
     const handleAddCategory = () => {
       const categoryName = newintrest.trim();
       if (categoryName) {
@@ -69,15 +70,34 @@ const Intrest =  ({userId}:props) => {
   
       getCategories();
     }, [])
-  
+    // useEffect(() => {
+    //   // Define an async function to fetch user interests
+    //   const fetchUserInterests = async () => {
+    //     try {
+    //       const user = await fetchUser(userId);
+    //       setUserInterests(user.Interests); // Assuming 'interests' is an array of item._id
+    //     } catch (error) {
+    //       console.error("Failed to fetch user interests:", error);
+    //     }
+    //   };
+    
+      // Call the async function
+    //   fetchUserInterests();
+    // }, [userId]);
     const form = useForm<z.infer<typeof FormSchema>>({
         resolver: zodResolver(FormSchema),
         defaultValues: {
             items: selectedItems.map((item) => item._id),
         }
       })
+      console.log(selectedItems)
         async  function onSubmit(data: z.infer<typeof FormSchema>) {
-            await insertintrest(userId , selectedItems);
+          const selectedIds = selectedItems
+          .filter((item) => data.items.includes(item._id))
+          .map((item) => item._id);
+      console.log(selectedIds)
+        // Pass the selected IDs to the insertintrest function
+        await insertintrest(userId, selectedIds);
             setShowForm(false);
       }
    
@@ -113,16 +133,18 @@ const Intrest =  ({userId}:props) => {
                                     className="flex flex-row items-start space-x-3 space-y-0"
                                   >
                                     <FormControl>
-                                      <Checkbox
-                                        checked={field.value?.includes(item._id)}
+                                    <Checkbox
+                                        checked={userInterests.includes(item._id)}
                                         onCheckedChange={(checked) => {
-                                          return checked
-                                           ? field.onChange([...Array.isArray(field.value)? field.value : [], item._id])
-                                            : field.onChange(
-                                                field.value?.filter(
-                                                  (value) => value!== item._id
-                                                )
-                                              );
+                                          if (checked) {
+                                            setUserInterests((prevInterests) => [...prevInterests, item._id]);
+                                          } else {
+                                            setUserInterests((prevInterests) => prevInterests.filter((id) => id!== item._id));
+                                          }
+                                          const updatedValue = checked
+                                           ? [...(field.value || []), item._id]
+                                            : (field.value || []).filter((value) => value!== item._id);
+                                          field.onChange(updatedValue);
                                         }}
                                       />
                                     </FormControl>

@@ -19,6 +19,7 @@ interface props {
       name: string;
       image: string;
       id: string;
+      _id?:string;
     };
     community: {
       id: string;
@@ -60,7 +61,7 @@ interface props {
         threadId :id.toString(),
         userId : userInfo?._id.toString()
       };
-
+     
     return (
       <article className={`flex flex-col w-full  rounded-xl  ${iscomment ? 
             "px-0 xs:px-7" : "bg-dark-2 p-7"}`}>
@@ -124,13 +125,7 @@ interface props {
                 </div>
            </div>
         </div>
-        {/* <DeleteThread
-          threadId={JSON.stringify(id)}
-          currentUserId={currentuserId.toString()}
-          authorId={author.id}
-          parentId={parentId}
-          isComment={iscomment}
-        /> */}
+        
       </div>
       {!iscomment && comments.length > 0 && (
         <div className='ml-1 mt-3 flex items-center gap-2'>
@@ -178,8 +173,8 @@ interface props {
               )} 
                {isHomePage && (
           <FollowBlockCard
-            author={author.id}
-            currentuser={currentuserId}
+            author={author._id?.toString()}
+            currentuser={data.userId}
             isHomePage={isHomePage}
         />
       )}

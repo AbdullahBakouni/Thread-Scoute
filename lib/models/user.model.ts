@@ -29,9 +29,12 @@ const userSchema = new mongoose.Schema({
             ref : "Thread"
         }
     ],
-    Interests : {
-        type : [String],
-    },
+    Interests : [
+        {
+            type : mongoose.Schema.Types.ObjectId,
+            ref : "Intrest"
+        }
+    ],
     SharedThreads : [
         {
             type : mongoose.Schema.Types.ObjectId,
@@ -44,12 +47,18 @@ const userSchema = new mongoose.Schema({
             ref : "Thread"
         }
       ],
-      IntrestedUser : {
-        type : [String],
-    },
-    BlockUser : {
-        type : [String],
-    },
+      IntrestedUser :  [
+        {
+            type : mongoose.Schema.Types.ObjectId,
+            ref : "User"
+        }
+      ],
+    BlockUser :  [
+        {
+            type : mongoose.Schema.Types.ObjectId,
+            ref : "User"
+        }
+      ],
     followinguser : {
         type : [String],
     },

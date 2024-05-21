@@ -3,19 +3,69 @@
 import { revalidatePath } from "next/cache";
 
 import { ConnenctToDB } from "../mongoose";
-
 import User from "../models/user.model";
 import Thread from "../models/thread.model";
 import Community from "../models/Community.model";
-
-export async function fetchPosts(pageNumber = 1, pageSize = 20) {
+import { fetchUser, getUserLikedThreads, getuserblockedusers, getuserintrests, getuserintrestusers } from "./user.action";
+interface Conditions {
+  parentId: {
+    $in: (null | undefined)[];
+  };
+  text?: {
+    $regex?: RegExp;
+    $or?: { $regex: RegExp }[];
+  };
+  author?: {
+    $nin?: string[];
+    $in?: string[];
+  };
+}
+export async function fetchPosts(userId:string,pageNumber = 1, pageSize = 20) {
   ConnenctToDB();
-
-  // Calculate the number of posts to skip based on the page number and page size.
+  const user = await fetchUser(userId)
+  const userintrests = await getuserintrests(user._id)
+  const userintrestname = userintrests.map((item:any) => item.name);
+  const Likesthreadstext = await getUserLikedThreads(user._id);
+  console.log(userintrestname)
+  
+  const blockeduser = await getuserblockedusers(user._id);
+  const intresteduser = await getuserintrestusers(user._id);
+  
   const skipAmount = (pageNumber - 1) * pageSize;
+  let conditions: Conditions = {
+    parentId: {
+      $in: [null, undefined]
+    }
+  };
+  let textConditions = [];
 
+  if (user && userintrestname && userintrestname.length > 0) {
+    textConditions.push(new RegExp(userintrestname.join('|'), 'i'));
+  }
+  
+  let likedWords = [];
+  if (Likesthreadstext && Likesthreadstext.length > 0) {
+    const likedPosts = await Thread.find({ _id: { $in: Likesthreadstext } }).select('text');
+    likedWords = likedPosts.map(post => post.text.match(/\w+/g)).flat();
+    textConditions.push(new RegExp(likedWords.join('|'), 'i'));
+  }
+  
+  // Combine both conditions with an OR operator in the regex
+  if (textConditions.length > 0) {
+    conditions['text'] = { $regex: new RegExp(textConditions.map(regex => regex.source).join('|'), 'i') };
+  }
+    if (blockeduser && blockeduser.length > 0) {
+      conditions['author'] = { $nin: blockeduser };
+    }
+    if(intresteduser && intresteduser.length > 0){
+      conditions['author'] = { $in: intresteduser };
+    }
+    if (!blockeduser || !userintrests || !Likesthreadstext || !intresteduser) {
+      conditions = { parentId: { $in: [null, undefined] } };
+    }
+  console.log(conditions)
   // Create a query to fetch the posts that have no parent (top-level threads) (a thread that is not a comment/reply).
-  const postsQuery = Thread.find({ parentId: { $in: [null, undefined] } })
+  const postsQuery = Thread.find(conditions)
     .sort({ createdAt: "desc" })
     .skip(skipAmount)
     .limit(pageSize)
@@ -42,7 +92,7 @@ export async function fetchPosts(pageNumber = 1, pageSize = 20) {
   }); // Get the total count of posts
 
   const posts = await postsQuery.exec();
-
+  // console.log(posts)
   const isNext = totalPostsCount > skipAmount + posts.length;
 
   return { posts, isNext };

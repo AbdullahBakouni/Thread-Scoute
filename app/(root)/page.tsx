@@ -1,13 +1,16 @@
 import ThreadCard from "@/components/cards/ThreadCard";
 import { Button } from "@/components/ui/button";
 import { fetchPosts } from "@/lib/actions/thread.action";
+import { fetchUser } from "@/lib/actions/user.action";
 import { currentUser } from "@clerk/nextjs";
  
 export default async function Home() {
-  const AllPosts = await fetchPosts(1,30);
   const user = await currentUser();
+  const userinfo = await fetchUser(user?.id || "");
+  const AllPosts = await fetchPosts(user?.id || "",1,30);
+//   console.log(userinfo)
   const isHomePage = true;
-//   console.log(posts)
+//   console.log(AllPosts.author)
      return (
           <>
           <h1 className="head-text text-left">Home</h1>
@@ -37,8 +40,8 @@ export default async function Home() {
                               ))}
                                
                          </>
-                    )}
-               </section>
+                    )} 
+                </section>
           </>
   )
   

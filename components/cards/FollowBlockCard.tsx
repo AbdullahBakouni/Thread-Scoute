@@ -1,23 +1,27 @@
 "use client"
 import { useEffect, useState } from 'react'
 import { Button } from '../ui/button'
-import { isuserFollowing, showless, showmore } from '@/lib/actions/user.action'
+import { isuserFollowing, revalidat, showless, showmore } from '@/lib/actions/user.action'
+import { usePathname } from 'next/navigation'
+// import { usePathname } from 'next/navigation'
 interface props {
-    author : string,
+    author ?: string,
     currentuser : string,
     isHomePage : boolean,
 }
 const FollowBlockCard = ({author,currentuser,isHomePage}:props) => {
+  
   const [isFollowing, setIsFollowing] = useState(false);
   const [alert, setAlert] = useState({ show: false, message: '' });
   const checkFollowStatus = async () => {
-    try {
-      // Here you would have a function that checks if the current user is following the author
-      // This is just a placeholder for the actual implementation
-      const response = await isuserFollowing(author, currentuser);
-      setIsFollowing(response);
-    } catch (error) {
-      console.error('Error checking follow status:', error);
+    if (author) {
+      try {
+        const response = await isuserFollowing(author, currentuser);
+        setIsFollowing(response);
+  
+      } catch (error) {
+        console.error('Error checking follow status:', error);
+      }
     }
   };
   // Call checkFollowStatus on component mount and when author or currentuser changes
@@ -25,30 +29,31 @@ const FollowBlockCard = ({author,currentuser,isHomePage}:props) => {
     checkFollowStatus();
   }, [author, currentuser]);
 
-  const handlefollow = async() =>{
-    try {
-      // Call the showmore server action
-      await showmore(author, currentuser); // Pass the actual IDs
-
-      // If successful:
-      setIsFollowing(true);
-      setAlert({ show: true, message: 'You are now following this user.' });
-      // Hide the alert after some time
-      setTimeout(() => setAlert({ show: false, message: '' }), 4000);
-    } catch (error) {
-      // Handle any errors here
-      setAlert({ show: true, message: 'An error occurred. Please try again.' });
+  const handlefollow = async () => {
+    if (author) {
+      try {
+        await showmore(author, currentuser);
+        setIsFollowing(true);
+        setAlert({ show: true, message: 'You are now following this user.' });
+        setTimeout(() => setAlert({ show: false, message: '' }), 4000);
+      } catch (error) {
+        setAlert({ show: true, message: 'An error occurred. Please try again.' });
+      }
     }
-  }
+  };
+  
        
-  const handleblock = async() =>{
-    try {
-      await showless(author, currentuser);
-      setIsFollowing(false);
-      setAlert({ show: true, message: 'You have blocked this user.' });
-      setTimeout(() => setAlert({ show: false, message: '' }), 4000);
-    } catch (error) {
-      setAlert({ show: true, message: 'An error occurred. Please try again.' });
+  const handleblock = async () => {
+    console.log('handleblock called'); 
+    if (author) {
+      try {
+        await showless(author, currentuser);
+        setIsFollowing(false);
+        setAlert({ show: true, message: 'You have blocked this user.' });
+        setTimeout(() => setAlert({ show: false, message: '' }), 4000);
+      } catch (error) {
+        setAlert({ show: true, message: 'An error occurred. Please try again.' });
+      }
     }
   };
   
@@ -65,7 +70,7 @@ const FollowBlockCard = ({author,currentuser,isHomePage}:props) => {
           <Button variant="secondary" className="bg-dark-3 text-light-2 rounded-full hover:bg-dark-1" onClick={handleblock}>
             Block
           </Button>
-        )}
+       )}
       </div>
     )}
   </>

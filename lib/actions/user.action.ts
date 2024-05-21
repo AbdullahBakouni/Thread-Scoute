@@ -91,18 +91,21 @@ export async function fetchUserPosts(userId: string) {
     throw error;
   }
 }
-  export async function insertintrest(id:string, interests:object[]) {
-    ConnenctToDB();
+export async function insertintrest(id:string, interests:string) {
+  ConnenctToDB();
 
-    try {
-      await  User.findOneAndUpdate({id:id},{
-        Interests : interests
-      }
-    )
-    } catch (error:any) {
-      throw new Error (`Failed to add intereasts : ${error.message}`)
-    }
+  try {
+    await User.findOneAndUpdate(
+      { id: id },
+      {
+        $addToSet: { Interests: { $each: interests } }// Push the string IDs directly
+      },
+      { new: true }
+    );
+  } catch (error) {
+    console.error('Error updating user interests:', error);
   }
+}
   export async function fetchUserByName(username:string){
     ConnenctToDB();
       try {
@@ -156,18 +159,23 @@ if (receiveuser && sentuser && post) {
 export async function showmore(authorId:string,currentUserId:string){
     ConnenctToDB();
   try {
-    const author = await User.findOne({id:authorId});
+  
+    const author = await User.findById(authorId);
     console.log(author)
-    const currentuser = await User.findOne({id:currentUserId});
+    const currentuser = await User.findById(currentUserId);
       if(!author || !currentuser){
         throw new Error("Author not found or currentuser")
       }
-       currentuser.IntrestedUser.push(author._id);
+      if(currentuser.BlockUser.includes(authorId)){
+        currentuser.BlockUser.pull(authorId);
+      }
+       currentuser.IntrestedUser.push(authorId);
         currentuser.myFollowNumber += 1;
-        author.followinguser.push(currentuser._id);
+        author.followinguser.push(currentUserId);
         author.followingpeople += 1;
       await currentuser.save();
       await author.save();
+    
   } catch (error:any) {
     throw new Error (`Failed follwo user${error.message}`)
     
@@ -177,22 +185,25 @@ export async function showmore(authorId:string,currentUserId:string){
 export async function showless(authorId:string,currentUserId:string){
   ConnenctToDB();
   try {
-    const author = await User.findOne({id:authorId});
-    const currentuser = await User.findOne({id:currentUserId});
+    
+    const author = await User.findById(authorId);
+    const currentuser = await User.findById(currentUserId);
 
     if(!author || !currentuser){
       throw new Error("Author not found or currentuser")
     }
-     currentuser.BlockUser.push(authorId);
+    
      if(currentuser.IntrestedUser.includes(authorId)){
        // Remove the blocked author from the IntrestedUser array
-       currentuser.IntrestedUser = currentuser.IntrestedUser.pull(authorId);
+        currentuser.IntrestedUser.pull(authorId);
+        currentuser.BlockUser.push(authorId);
        currentuser.myFollowNumber -= 1;
        author.followinguser.pull(currentUserId);
        author.followingpeople -= 1;
      }
     await currentuser.save();
     await author.save();
+    
   } catch (error:any) {
     throw new Error (`Failed to block user${error.message}`)
   }
@@ -254,16 +265,19 @@ export async function getpostusercommentedon(userId:string){
   }
 }
 export async function isuserFollowing(authorId:string,currentUserId:string){
-
-  ConnenctToDB();
+  
   try {
-    const author = await User.findOne({id:authorId});
-    const currentUser = await User.findOne({ id: currentUserId });
-    return currentUser.IntrestedUser.includes(author._id.toString());
+    ConnenctToDB();
+    const currentUser = await User.findById( currentUserId );
+    return currentUser.IntrestedUser.includes(authorId);
   } catch (error) {
     console.error('Error checking follow status:', error);
     return false; 
   }
+ 
+}
+export async function revalidat(path:string){
+  revalidatePath(path)
 }
 export async function getuserrecievedthreads(userId:string){
 
@@ -751,6 +765,126 @@ export async function removeUserFromRequestedJoin(communityId: string, userId: s
     throw error;
   }
 }
+export async function getUserLikedThreads(userId: string) {
+  ConnenctToDB();
+  try {
+    const user = await User.findById(userId).populate({
+      path: 'LikedThreads', // Changed from 'Interests' to 'LikedThreads'
+      model: 'Thread', // Assuming 'Thread' is the model name for LikedThreads
+   // Selecting only the 'text' field from LikedThreads
+    });
+    return user.LikedThreads // Mapping to return only text
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+}
+export async function getuserblockedusers(userId: string) {
+  ConnenctToDB();
+  try {
+    const user = await User.findById(userId).populate({
+      path: 'BlockUser', // Changed from 'Interests' to 'LikedThreads'
+      model: 'User', // Assuming 'Thread' is the model name for LikedThreads
+   // Selecting only the 'text' field from LikedThreads
+    });
+    return user.BlockUser // Mapping to return only text
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+}
+export async function getuserintrestusers(userId: string) {
+  ConnenctToDB();
+  try {
+    const user = await User.findById(userId).populate({
+      path: 'IntrestedUser', // Changed from 'Interests' to 'LikedThreads'
+      model: 'User', // Assuming 'Thread' is the model name for LikedThreads
+   // Selecting only the 'text' field from LikedThreads
+    });
+    return user.IntrestedUser // Mapping to return only text
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+}
 
+
+export async function fetchsuggestedUsers({
+  userId,
+  searchString = "",
+  pageNumber = 1,
+  pageSize = 20,
+  sortBy = "desc",
+}: {
+  userId:string
+  searchString?: string;
+  pageNumber?: number;
+  pageSize?: number;
+  sortBy?: SortOrder;
+  
+}){
+  interface UsersQuery {
+    $and: Array<{
+      _id?: { $nin?: string[]; $ne?: string; };
+      'threads.text'?: { $regex?: RegExp }; 
+      $or?: Array<{
+        bio?: { $regex?: RegExp };
+        'threads.text'?: { $regex?: RegExp }; 
+      }>;
+    }>;
+  }
+  try {
+      ConnenctToDB();
+
+      const user = await fetchUser(userId)
+      const userintrests = await getuserintrests(user._id)
+      const userintrestname = userintrests.map((item:any) => item.name);
+      const blockeduser = await getuserblockedusers(user._id);
+      const skipAmount = (pageNumber - 1) * pageSize;
+      const interestsRegex = new RegExp(userintrestname.join('|'), 'i');
+      let query : UsersQuery = {
+        $and: [
+          { _id: { $nin: blockeduser } },
+          { _id: { $ne: user._id } }
+        ],
+      };
+        if(userintrestname > 0){
+          query.$and.push({
+            $or: [
+              { bio: { $regex: interestsRegex } },
+             
+              { 'threads.text': { $regex: interestsRegex } }
+            ]
+          });
+    }else {
+      query = {
+        $and: [
+          { _id: { $nin: blockeduser } },
+          { _id: { $ne: user._id } },
+          { 'threads.text': { $regex: interestsRegex } }
+        ],
+      };
+    }
+    const sortOptions = { createdAt: sortBy };
+
+    const usersQuery = User.find(query)
+      .sort(sortOptions)
+      .skip(skipAmount)
+      .limit(pageSize);
+
+    // Count the total number of users that match the search criteria (without pagination).
+    const totalUsersCount = await User.countDocuments(query);
+
+    const users = await usersQuery.exec();
+
+    // Check if there are more users beyond the current page.
+    const isNext = totalUsersCount > skipAmount + users.length;
+
+    return { users, isNext };
+  } catch (error) {
+    console.error("Error fetching Users:", error);
+    throw error;
+  }
+}
 
 
