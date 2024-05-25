@@ -16,7 +16,7 @@ async function Page({ params }: { params: { id: string } }) {
   const data = {
     communityid: communityDetails._id.toString()
   }
-  console.log(communityDetails)
+ 
   const isAdmin = communityDetails.admins?.some((admin:any) => admin.id === user.id);
   const iscreator = communityDetails.createdBy!== null && communityDetails.createdBy.id === user.id;
   return (

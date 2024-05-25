@@ -24,7 +24,6 @@ export default async function Component() {
       userID: userInfo?._id.toString(),
       userImage:userInfo?.image.toString()
     };
-    console.log(usercommunities.communityInfo)
     const transformedInterests = interest.map((interest: any) => {
       return JSON.parse(JSON.stringify(interest));
     });

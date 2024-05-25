@@ -108,9 +108,9 @@ const [value, setValue] = useState('');
                 type="text"
                 className="no-focus" 
                 value = {value}
-                // {...field}
+             
                 onChange={handleChange}
-                placeholder="Type here..."
+                placeholder="Type here...#"
               />
             </FormControl>
           </FormItem>

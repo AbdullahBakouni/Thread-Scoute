@@ -91,7 +91,7 @@ export async function fetchUserPosts(userId: string) {
     throw error;
   }
 }
-export async function insertintrest(id:string, interests:string) {
+export async function insertintrest(id:string, interests: string[]) {
   ConnenctToDB();
 
   try {

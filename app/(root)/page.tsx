@@ -1,16 +1,25 @@
 import ThreadCard from "@/components/cards/ThreadCard";
-import { Button } from "@/components/ui/button";
+import Pagination from "@/components/shared/Pagination";
 import { fetchPosts } from "@/lib/actions/thread.action";
 import { fetchUser } from "@/lib/actions/user.action";
 import { currentUser } from "@clerk/nextjs";
+import { redirect } from "next/navigation";
  
-export default async function Home() {
+export default async function Home({
+     searchParams,
+   }: {
+     searchParams: { [key: string]: string | undefined };
+   }) {
   const user = await currentUser();
-  const userinfo = await fetchUser(user?.id || "");
-  const AllPosts = await fetchPosts(user?.id || "",1,30);
-//   console.log(userinfo)
+  if (!user) return null;
+
+  const userInfo = await fetchUser(user.id);
+  if (!userInfo?.onboarded) redirect("/onboarding");
+  const AllPosts = await fetchPosts(user?.id || "", searchParams.page ? +searchParams.page : 1,
+  30);
+
   const isHomePage = true;
-//   console.log(AllPosts.author)
+
      return (
           <>
           <h1 className="head-text text-left">Home</h1>
@@ -42,6 +51,11 @@ export default async function Home() {
                          </>
                     )} 
                 </section>
+                <Pagination
+                    path='/'
+                    pageNumber={searchParams?.page ? +searchParams.page : 1}
+                    isNext={AllPosts.isNext}
+                    />
           </>
   )
   

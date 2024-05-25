@@ -31,7 +31,7 @@ const LeaveCommunityButton =  ({usercommunities,userId,communitynumber,objectuse
     // const iscreator = usercommunities.createdBy!== null && usercommunities.createdBy.id === userId; 
     const handleDelete = async (commid: any) => {
         try {
-            await removeUserFromCommunity(userId,commid,path);
+            await removeUserFromCommunity(userId,commid);
             // If successful, update the state to reflect that the user has left
             const updatedCommunities = communities.filter(comminfo => comminfo.id.toString() !== commid.toString());
             setCommunities(updatedCommunities);

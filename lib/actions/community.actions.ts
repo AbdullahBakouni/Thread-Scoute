@@ -601,7 +601,7 @@ export async function getusercommunitiescount(userId: string,path:string) {
   try {
     ConnenctToDB(); // Please ensure this is correctly spelled as ConnectToDB()
 
-    const user = await User.findById(userId)
+    const user = await User.findOne({id:userId})
       .populate({
         path: "communities",
         model: Community,

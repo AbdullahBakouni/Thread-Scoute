@@ -24,7 +24,7 @@ async function Page() {
     const communitiesrequest = await addnotificationcommunitiesjoin(userInfo._id);
     const communityintivitationasmember = await getInvitationsWithCommunities(userInfo._id);
     const communityintivitationasadmin = await getInvitationsWithCommunitiesaddmins(userInfo._id);
-  console.log(communityintivitationasmember)
+  
     const dataObjects = communityintivitationasmember.map(item => {
       return {
         communityId: item._id.toString(),

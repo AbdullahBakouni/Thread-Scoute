@@ -37,7 +37,7 @@ const AcceptDeleteButton = ({comminfo,userinfo}:props) => {
     try {
       await addMemberToCommunity(communityId, userinfo.userId,path);
       const isMember = comminfo.some((community) => community.members.includes(userinfo.userId));
-    console.log(isMember)
+    
     if (isMember) {
       // Hide the invite if the user is a member
       setVisibleInvites((prev) => prev.filter((id) => id !== communityId));
@@ -51,7 +51,7 @@ const AcceptDeleteButton = ({comminfo,userinfo}:props) => {
   const handledelete = async (communityId:string) => {
     try {
       const isMember = comminfo.some((community) => community.members.includes(userinfo.userId));
-      console.log(isMember)
+      
       if (isMember === false) {
         // Hide the invite if the user is not a member
         await removeintivitionasmember(userinfo.userId,path)

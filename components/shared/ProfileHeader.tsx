@@ -50,11 +50,7 @@ const ProfileHeader = async ({
         const data = {
           userId : userInfo._id.toString()
         }
-            // console.log(members)
-            // console.log(admins)
-        const isAnyMemberAlsoAdmin = members?.some(member => 
-          admins?.some(admin => admin.id === member.id)
-        );
+        
         
   return (  
     <div className="flex flex-col w-full justify-start">

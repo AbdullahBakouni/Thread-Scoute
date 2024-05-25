@@ -8,7 +8,7 @@ import Thread from "../models/thread.model";
 import Community from "../models/Community.model";
 import { fetchUser, getUserLikedThreads, getuserblockedusers, getuserintrests, getuserintrestusers } from "./user.action";
 interface Conditions {
-  parentId: {
+  parentId?: {
     $in: (null | undefined)[];
   };
   text?: {
@@ -19,84 +19,85 @@ interface Conditions {
     $nin?: string[];
     $in?: string[];
   };
+  $or?: { [key: string]: any }[];
 }
-export async function fetchPosts(userId:string,pageNumber = 1, pageSize = 20) {
-  ConnenctToDB();
-  const user = await fetchUser(userId)
-  const userintrests = await getuserintrests(user._id)
-  const userintrestname = userintrests.map((item:any) => item.name);
-  const Likesthreadstext = await getUserLikedThreads(user._id);
-  console.log(userintrestname)
-  
-  const blockeduser = await getuserblockedusers(user._id);
-  const intresteduser = await getuserintrestusers(user._id);
-  
+export async function fetchPosts(userId:string, pageNumber = 1, pageSize = 20) {
+  await ConnenctToDB(); // Assuming this function establishes the database connection
+
+  const user = await fetchUser(userId);
+  const userInterests = await getuserintrests(user._id);
+  const userInterestNames = userInterests.map((item:any) => item.name);
+  const likedThreadsText = await getUserLikedThreads(user._id);
+  const blockedUsers = await getuserblockedusers(user._id);
+  const interestedUsers = await getuserintrestusers(user._id);
+
   const skipAmount = (pageNumber - 1) * pageSize;
   let conditions: Conditions = {
-    parentId: {
-      $in: [null, undefined]
-    }
+    $or: [
+      { parentId: null },
+      { parentId: { $exists: false } },
+    ],
   };
-  let textConditions = [];
+  let textConditions: RegExp[] = [];
 
-  if (user && userintrestname && userintrestname.length > 0) {
-    textConditions.push(new RegExp(userintrestname.join('|'), 'i'));
+  if (userInterestNames.length > 0) {
+    textConditions.push(new RegExp(userInterestNames.join('|'), 'i'));
   }
-  
-  let likedWords = [];
-  if (Likesthreadstext && Likesthreadstext.length > 0) {
-    const likedPosts = await Thread.find({ _id: { $in: Likesthreadstext } }).select('text');
-    likedWords = likedPosts.map(post => post.text.match(/\w+/g)).flat();
-    textConditions.push(new RegExp(likedWords.join('|'), 'i'));
+  if (likedThreadsText.length > 0) {
+    const likedPosts = await Thread.find({ _id: { $in: likedThreadsText } }).select('text');
+    const likedWords = likedPosts.map((post) => post.text.match(/\w{6,}/g))
+    .filter(match => match) // Filter out null values
+    .flat();
+    // Escape special characters in words
+    const escapedLikedWords = likedWords.map(word => word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    if (escapedLikedWords.length > 0) {
+      textConditions.push(new RegExp(escapedLikedWords.join('|'), 'i'));
+    }
   }
-  
-  // Combine both conditions with an OR operator in the regex
+
   if (textConditions.length > 0) {
-    conditions['text'] = { $regex: new RegExp(textConditions.map(regex => regex.source).join('|'), 'i') };
+    const combinedRegex = new RegExp(textConditions.map(regex => regex.source).join('|'), 'i');
+    conditions.text = { $regex: combinedRegex };
   }
-    if (blockeduser && blockeduser.length > 0) {
-      conditions['author'] = { $nin: blockeduser };
-    }
-    if(intresteduser && intresteduser.length > 0){
-      conditions['author'] = { $in: intresteduser };
-    }
-    if (!blockeduser || !userintrests || !Likesthreadstext || !intresteduser) {
-      conditions = { parentId: { $in: [null, undefined] } };
-    }
-  console.log(conditions)
-  // Create a query to fetch the posts that have no parent (top-level threads) (a thread that is not a comment/reply).
+
+  if (blockedUsers.length > 0) {
+    conditions.author = { $nin: blockedUsers };
+  }
+
+  if (interestedUsers.length > 0) {
+    conditions.author = { $in: interestedUsers };
+  }
+  
+  // Create a query to fetch the posts
   const postsQuery = Thread.find(conditions)
-    .sort({ createdAt: "desc" })
+    .sort({ createdAt: 'desc' })
     .skip(skipAmount)
     .limit(pageSize)
     .populate({
-      path: "author",
+      path: 'author',
       model: User,
     })
     .populate({
-      path: "community",
+      path: 'community',
       model: Community,
     })
     .populate({
-      path: "children", // Populate the children field
+      path: 'children',
       populate: {
-        path: "author", // Populate the author field within children
+        path: 'author',
         model: User,
-        select: "_id name parentId image", // Select only _id and username fields of the author
+        select: '_id name parentId image',
       },
     });
 
-  // Count the total number of top-level posts (threads) i.e., threads that are not comments.
-  const totalPostsCount = await Thread.countDocuments({
-    parentId: { $in: [null, undefined] },
-  }); // Get the total count of posts
-
+  // Count the total number of top-level posts
+  const totalPostsCount = await Thread.countDocuments(conditions);
   const posts = await postsQuery.exec();
-  // console.log(posts)
   const isNext = totalPostsCount > skipAmount + posts.length;
 
   return { posts, isNext };
 }
+
 
 interface Params {
   text: string,

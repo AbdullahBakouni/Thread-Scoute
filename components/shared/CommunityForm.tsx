@@ -42,10 +42,10 @@ const CommunityForm = ({userId,btnTitle}:props) => {
     const handleMembersChange = async (event: any) => {
       const newMembersArray = event.target.value.split(',').map((name: any) => name.trim()).filter(Boolean);
       setTextValue(event.target.value);
-      // جلب معرفات المستخدمين بناءً على الأسماء المستعارة
+     
       try {
         const userIds : string[] = await fetchUsersByUsername(newMembersArray);
-        setMembersArray(userIds); // تحديث الحالة بمعرفات المستخدمين
+        setMembersArray(userIds); 
       } catch (error) {
         console.error('Failed to fetch user IDs:', error);
       }
@@ -56,10 +56,10 @@ const CommunityForm = ({userId,btnTitle}:props) => {
       const handleAdminsChange = async (event:any) => {
         const newMembersArray = event.target.value.split(',').map((name: any) => name.trim()).filter(Boolean);
         setAdminValue(event.target.value);
-      // جلب معرفات المستخدمين بناءً على الأسماء المستعارة
+     
       try {
         const userIdss : string[] = await fetchUsersByUsername(newMembersArray);
-        setAdminsArray(userIdss); // تحديث الحالة بمعرفات المستخدمين
+        setAdminsArray(userIdss); 
       } catch (error) {
         console.error('Failed to fetch user IDs:', error);
       }
@@ -264,7 +264,7 @@ const CommunityForm = ({userId,btnTitle}:props) => {
                 className="account-form_input no-focus" 
                 {...field}
                 value = {textValue}
-                placeholder="invite by usernamed seperate a comma to invite multi pepole"
+                placeholder="invite by usernamed seperate a comma to invite multi pepole and end with a comma"
                 onChange={handleMembersChange}
               />
             </FormControl>
@@ -285,7 +285,7 @@ const CommunityForm = ({userId,btnTitle}:props) => {
                rows={3}
                 className="account-form_input no-focus" 
                 {...field}
-                placeholder="invite by usernamed seperate a comma to invite multi pepole"
+                placeholder="invite by usernamed seperate a comma to invite multi pepole and end with a comma"
                 value={admintValue}
                 onChange={handleAdminsChange}
               />

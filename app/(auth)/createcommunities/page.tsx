@@ -9,7 +9,7 @@ export default async function page() {
   const data = {
     id:userInfo._id.toString()
   }
-  console.log(data.id)
+ 
   return (
     <main className='mx-auto flex max-w-3xl flex-col justify-start px-10 py-20'>
         <h1 className='head-text'>Create Community</h1>

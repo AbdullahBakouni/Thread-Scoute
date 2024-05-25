@@ -52,21 +52,21 @@ const [open,SetIsopen] = useState(true);
     const handleMembersChange = async (event: any) => {
       const newMembersArray = event.target.value.split(',').map((name: any) => name.trim()).filter(Boolean);
       setTextValue(event.target.value);
-      // جلب معرفات المستخدمين بناءً على الأسماء المستعارة
+      
       try {
         const userIds : string[] = await fetchUsersByUsername(newMembersArray);
-        setMembersArray(userIds); // تحديث الحالة بمعرفات المستخدمين
+        setMembersArray(userIds);
       } catch (error) {
         console.error('Failed to fetch user IDs:', error);
       }
-      console.log(membersArray)
+    
     };
     
       
       const handleAdminsChange = async (event:any) => {
         const newMembersArray = event.target.value.split(',').map((name: any) => name.trim()).filter(Boolean);
         setAdminValue(event.target.value);
-      // جلب معرفات المستخدمين بناءً على الأسماء المستعارة
+      
       try {
         const userIdss : string[] = await fetchUsersByUsername(newMembersArray);
         setAdminsArray(userIdss); // تحديث الحالة بمعرفات المستخدمين
