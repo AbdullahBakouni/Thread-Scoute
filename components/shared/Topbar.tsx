@@ -27,7 +27,7 @@ const Topbar = async () => {
                 alt='logo'
                 className='rounded-full shadow'
               />
-              <p className='text-heading3-bold text-light-1 max-xs:hidden'>Thread Scout</p>
+              <p className='text-heading3-bold text-light-1 max-xs:hidden max-xl:hidden'>Thread Scout</p>
         </Link>
         <div className='flex items-center gap-1'>
               <div className='block md:hidden'>
