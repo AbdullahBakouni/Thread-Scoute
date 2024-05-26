@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import { Button } from '../ui/button'
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { deleteuserintrest } from '@/lib/actions/user.action';
 interface Interest {
     _id: string;
@@ -33,7 +33,7 @@ const Intrestbutton = ({userId,interests,userimage}:props) => {
     {currentInterests.map((interest) => (
       <div key={interest._id} className="flex items-center justify-between">
          <div className="flex items-center gap-3">
-        <img
+        <Image
           alt={`Thumbnail of ${interest.name}`}
           className="rounded-full"
           height={40}

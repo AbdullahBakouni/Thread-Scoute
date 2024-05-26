@@ -5,6 +5,7 @@ import { Button } from '../ui/button'
 import { getusercommunitiescount, removeUserFromCommunity } from '@/lib/actions/community.actions'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card'
 import { usePathname } from 'next/navigation'
+import Image from 'next/image'
 interface props {
     usercommunities : {
         bio:string;
@@ -59,7 +60,7 @@ const LeaveCommunityButton =  ({usercommunities,userId,communitynumber,objectuse
               {communities.map((comminfo:any) => (
         <div key={comminfo._id} className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img
+            <Image
               alt={`Thumbnail of ${comminfo.name}`}
               className="rounded-full"
               height={40}

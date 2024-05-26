@@ -27,7 +27,6 @@ export default async function Component() {
     const transformedInterests = interest.map((interest: any) => {
       return JSON.parse(JSON.stringify(interest));
     });
-    console.log(usercommunities.communityInfo)
   return (
     <main className="flex-1 overflow-auto p-4 md:p-6 ">
       <div className="mx-auto max-w-4xl space-y-6 ">
@@ -42,7 +41,7 @@ export default async function Component() {
               {posts.map((post) => (
         <div key={post._id} className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img
+            <Image
               alt={`Thumbnail of ${post.author.name}`}
               className="rounded-full"
               height={40}
@@ -87,7 +86,7 @@ export default async function Component() {
               {followers.map((post:any) => (
         <div key={post._id} className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img
+            <Image
               alt={`Thumbnail of ${post.name}`}
               className="rounded-full"
               height={40}
@@ -127,7 +126,7 @@ export default async function Component() {
   mostactiveuser.map((active) => (
     <div key={active._id} className="flex items-center justify-between">
       <div className="flex items-center gap-3">
-        <img
+        <Image
           alt={`Thumbnail of ${active.name}`}
           className="rounded-full"
           height={40}
@@ -172,7 +171,7 @@ export default async function Component() {
               {sharedpost.map((post) => (
         <div key={post._id} className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img
+            <Image
               alt={`Thumbnail of ${post.author.name}`}
               className="rounded-full"
               height={40}
