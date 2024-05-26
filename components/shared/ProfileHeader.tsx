@@ -71,7 +71,7 @@ const ProfileHeader = async ({
                 </div>
                 <div className="flex justify-center gap-4 items-center">
                 <div>
-                {accountId === authuserInfo && type !== "Community" && (
+                {accountId === authuserInfo && type === "User" && (
           <Link href='/profile/edit'>
             <div className='flex cursor-pointer gap-3 rounded-lg bg-dark-3 px-4 py-2'>
               <Image
@@ -81,7 +81,7 @@ const ProfileHeader = async ({
                 height={16}
               />
 
-              <p className='text-light-2 max-sm:hidden'>Edit</p>
+              <p className='text-light-2 max-sm:text-subtle-medium'>Edit</p>
             </div>
           </Link>
         )}
