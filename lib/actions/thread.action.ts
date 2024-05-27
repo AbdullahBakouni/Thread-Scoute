@@ -353,11 +353,12 @@ export async function removelike(postId:string, userId:string, path:string) {
         user.LikedThreads.pull(postId);
        
         userwholikes.pull(userId);
-        await author.save();
+       
         
         // تحديث عدد الإعجابات في المنشور
         originalPost.LikeCount -= 1;
         await author.save();
+        await user.save();
         await originalPost.save();
        
         // إعادة تحقق الصفحة

@@ -8,7 +8,9 @@ const RightSidebar = async () => {
   const user = await currentUser();
   if (!user) return null;
   const suggestedcommunities = await fetchsuggestedcommunities({ userId: user.id, pageSize: 4});
+  
   const suggestedusers = await fetchsuggestedUsers({ userId: user.id, pageSize: 4});
+  
   return (
    <section className='custom-scrollbar rightsidebar'>
       <div className='flex flex-1 flex-col justify-start '>
