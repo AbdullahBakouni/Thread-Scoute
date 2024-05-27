@@ -38,7 +38,7 @@ const AcceptDeleteButtonasAdmin = ({comminfoasadmin,userinfo}:props) => {
       try {
         await addMemberToCommunityasadmin(communityid, userinfo.userId,path);
         const isAdmin = comminfoasadmin.some((community) => community.admins.includes(userinfo.userId));
-      console.log(isAdmin)
+     
       if (isAdmin) {
         // Hide the invite if the user is a member
         setVisibleInvites((prev) => prev.filter((id) => id !== communityid));

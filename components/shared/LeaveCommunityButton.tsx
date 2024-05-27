@@ -25,7 +25,7 @@ interface props {
 const LeaveCommunityButton =  ({usercommunities,userId,communitynumber,objectuserID}:props) => {
   const isCreator = usercommunities.some((community) => community.createdBy?.id.toString() === objectuserID);
   const path = usePathname();
-  console.log(isCreator)
+ 
     const [hasLeft, setHasLeft] = useState(false);
     const [communities, setCommunities] = useState(usercommunities);
     const [communityCount, setCommunityCount] = useState(usercommunities.length);

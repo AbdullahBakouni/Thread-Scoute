@@ -49,7 +49,7 @@ const CommunityForm = ({userId,btnTitle}:props) => {
       } catch (error) {
         console.error('Failed to fetch user IDs:', error);
       }
-      console.log(membersArray)
+     
     };
     
       
@@ -63,7 +63,7 @@ const CommunityForm = ({userId,btnTitle}:props) => {
       } catch (error) {
         console.error('Failed to fetch user IDs:', error);
       }
-      console.log(AdminsArray)
+     
       };
     const form = useForm({
         resolver : zodResolver(CommunityValidation),

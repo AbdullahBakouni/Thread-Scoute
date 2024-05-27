@@ -1,16 +1,15 @@
-import { OrganizationSwitcher, SignOutButton, SignedIn, currentUser } from '@clerk/nextjs'
+import {  SignOutButton, SignedIn, currentUser } from '@clerk/nextjs'
 import Image from 'next/image'
 import Link from 'next/link'
 import Communitiesswitcher from './Communitiesswitcher'
-import { fetchUser, getCommunities, getusercommunities } from '@/lib/actions/user.action'
-import { redirect } from 'next/navigation'
+import { fetchUser, getCommunities } from '@/lib/actions/user.action'
+
 const Topbar = async () => {
   const user =  await currentUser();
 
     if(!user) return null;
 
     const userInfo = await fetchUser(user.id); //to fetch another user if we want to desplay her profile page not juset the user who log in
-    if(!userInfo.onboarded) redirect("/onboarding");
     const usercommunities = await getCommunities(userInfo._id);
     const data = {
       userId : userInfo._id.toString(),

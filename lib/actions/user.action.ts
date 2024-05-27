@@ -3,7 +3,6 @@ import { revalidatePath } from "next/cache";
 import User from "../models/user.model";
 import { ConnenctToDB } from "../mongoose";
 import Thread from "../models/thread.model";
-import { error } from "console";
 import mongoose, { Connection, FilterQuery, SortOrder } from "mongoose";
 import Intrest from "../models/intrest";
 import Community from "../models/Community.model";

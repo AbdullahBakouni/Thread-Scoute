@@ -69,11 +69,11 @@ const [open,SetIsopen] = useState(true);
       
       try {
         const userIdss : string[] = await fetchUsersByUsername(newMembersArray);
-        setAdminsArray(userIdss); // تحديث الحالة بمعرفات المستخدمين
+        setAdminsArray(userIdss); 
       } catch (error) {
         console.error('Failed to fetch user IDs:', error);
       }
-      console.log(AdminsArray)
+     
       };
   const form = useForm({
         resolver : zodResolver(CommunityValidation),

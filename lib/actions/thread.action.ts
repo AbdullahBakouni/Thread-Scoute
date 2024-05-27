@@ -351,8 +351,7 @@ export async function removelike(postId:string, userId:string, path:string) {
         } 
         const userwholikes = author.Userwholikes;
         user.LikedThreads.pull(postId);
-        console.log(userwholikes)
-        console.log(userId)
+       
         userwholikes.pull(userId);
         await author.save();
         

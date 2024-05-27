@@ -53,10 +53,7 @@ async function Threadstab ({currentUserId,accountId,accountType}:props)  {
   if (!result) {
     redirect("/");
   }
-      //   console.log(result.Threads)
-      //   console.log(accountId)
-      // console.log(typeof(result))
-      // console.log(typeof(result.threads))
+    
 
   return (
     <section className='mt-9 flex flex-col gap-10'>
